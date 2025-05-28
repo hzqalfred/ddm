@@ -1,0 +1,42 @@
+{
+  "type": "root",
+  "id": "menulist",
+  "data": [
+    {
+      "type": "control",
+      "ele": "menu",
+      "size": 50,
+      "title": "初始化配置",
+      "click": "btnMenu_click",
+      "id": "initPage",
+      "code": "initPage"
+    },
+    {
+      "type": "control",
+      "ele": "menu",
+      "size": 50,
+      "title": "套件管理",
+      "click": "btnMenu_click",
+      "id": "devManageList",
+      "code": "devManageList"
+    },
+    {
+      "type": "control",
+      "ele": "menu",
+      "size": 50,
+      "title": "开发套件",
+      "click": "btnMenu_click",
+      "id": "suiteManageList",
+      "code": "suiteManageList"
+    },   
+    {
+      "type": "control",
+      "ele": "menu",
+      "size": 50,
+      "title": "日志管理",
+      "click": "btnMenu_click",
+      "id": "LogList",
+      "code": "LogList"
+    }
+  ]
+}

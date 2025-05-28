@@ -1,0 +1,13 @@
+{
+    "type": "root",
+    "id": "l1",
+    "data": [
+      {
+        "type": "control",
+        "ele": "suiteManageList",
+        "id": "suiteManageList"
+      }
+    ]
+  }
+  
+  

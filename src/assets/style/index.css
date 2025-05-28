@@ -1,0 +1,12 @@
+.vxe-modal--body-default,
+.vxe-modal--content {
+    padding: 0 !important;
+}
+
+.vxe-form--item-content {
+    display: flex;
+}
+
+.ace_editor {
+    font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', 'Consolas', 'Source Code Pro', 'source-code-pro', monospace !important;
+}

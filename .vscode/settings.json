@@ -1,0 +1,7 @@
+{
+    "i18n-ally.localesPaths": [
+        "src/config/i18n",
+        "src/config/i18n/lang",
+        "src/core/components/TimeCron/vue3-cron/language"
+    ]
+}

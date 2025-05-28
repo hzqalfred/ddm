@@ -1,0 +1,347 @@
+{
+  "widgetList": [
+    {
+      "key": 98822,
+      "type": "input",
+      "icon": "text-field",
+      "formItemFlag": true,
+      "options": {
+        "name": "input38999",
+        "isFunItem": false,
+        "scanCode": false,
+        "scanCodeSkip": false,
+        "label": "input",
+        "labelAlign": "",
+        "type": "text",
+        "defaultValue": "",
+        "placeholder": "",
+        "columnWidth": "200px",
+        "size": "",
+        "labelWidth": null,
+        "labelHidden": false,
+        "readonly": false,
+        "disabled": false,
+        "hidden": false,
+        "clearable": true,
+        "showPassword": false,
+        "required": false,
+        "requiredHint": "",
+        "validation": "",
+        "validationHint": "",
+        "requiredMessage": "",
+        "customClass": "",
+        "labelIconClass": null,
+        "labelIconPosition": "rear",
+        "labelTooltip": null,
+        "minLength": null,
+        "maxLength": null,
+        "showWordLimit": false,
+        "prefixIcon": "",
+        "suffixIcon": "",
+        "appendButton": false,
+        "appendButtonDisabled": false,
+        "buttonIcon": "custom-search",
+        "onCreated": "",
+        "onMounted": "",
+        "onInput": "",
+        "onChange": "",
+        "onFocus": "",
+        "onBlur": "",
+        "onValidate": "",
+        "onAppendButtonClick": ""
+      },
+      "attrs": [
+        {
+          "name": "width",
+          "title": "长度",
+          "type": "number",
+          "remark": "长度2"
+        },
+        {
+          "name": "defaultValue",
+          "title": "默认值",
+          "type": "text",
+          "remark": "默认值"
+        },
+        {
+          "name": "required",
+          "title": "必填",
+          "type": "check",
+          "remark": "必填"
+        },
+        {
+          "name": "disabled",
+          "title": "禁用",
+          "type": "disabled-editor",
+          "remark": "禁用"
+        },
+        {
+          "name": "requiredMessage",
+          "title": "必填信息",
+          "type": "droplist",
+          "remark": "必填信息",
+          "options": [
+            {
+              "value": "请输入1",
+              "label": "请输入2",
+              "_X_OPTION_KEY": "opt_39"
+            }
+          ]
+        },
+        {
+          "name": "placeholder",
+          "title": "输入框占位文本",
+          "type": "text",
+          "remark": "输入框占位文本"
+        },
+        {
+          "name": "clearable",
+          "title": "是否可清空",
+          "type": "check",
+          "remark": "是否可清空"
+        },
+        {
+          "name": "patternCheck",
+          "title": "正则校验",
+          "type": "check",
+          "remark": "正则校验"
+        },
+        {
+          "name": "pattern",
+          "title": "正则表达式",
+          "type": "text",
+          "remark": "正则表达式"
+        },
+        {
+          "name": "patternMessage",
+          "title": "正则提示",
+          "type": "text",
+          "remark": "正则提示"
+        },
+        {
+          "name": "prefix-icon",
+          "title": "头部图标",
+          "type": "text",
+          "remark": "输入框头部图标"
+        },
+        {
+          "name": "suffix-icon",
+          "title": "尾部图标",
+          "type": "text",
+          "remark": "尾部图标"
+        },
+        {
+          "name": "disabled",
+          "title": "禁用",
+          "type": "check",
+          "remark": "禁用"
+        },
+        {
+          "name": "hidden",
+          "title": "隐藏",
+          "type": "check",
+          "remark": "隐藏"
+        }
+      ],
+      "events": [
+        {
+          "name": "onBlur",
+          "title": "聚焦事件",
+          "remark": "聚焦事件",
+          "params": [
+            "event"
+          ]
+        },
+        {
+          "name": "onChange",
+          "title": "变化事件",
+          "remark": "变化事件1",
+          "params": [
+            "event"
+          ]
+        }
+      ],
+      "id": "input38999"
+    },
+    {
+      "key": 98822,
+      "type": "input",
+      "icon": "text-field",
+      "formItemFlag": true,
+      "options": {
+        "name": "input101853",
+        "isFunItem": false,
+        "scanCode": false,
+        "scanCodeSkip": false,
+        "label": "input",
+        "labelAlign": "",
+        "type": "text",
+        "defaultValue": "",
+        "placeholder": "",
+        "columnWidth": "200px",
+        "size": "",
+        "labelWidth": null,
+        "labelHidden": false,
+        "readonly": false,
+        "disabled": false,
+        "hidden": false,
+        "clearable": true,
+        "showPassword": false,
+        "required": false,
+        "requiredHint": "",
+        "validation": "",
+        "validationHint": "",
+        "requiredMessage": "",
+        "customClass": "",
+        "labelIconClass": null,
+        "labelIconPosition": "rear",
+        "labelTooltip": null,
+        "minLength": null,
+        "maxLength": null,
+        "showWordLimit": false,
+        "prefixIcon": "",
+        "suffixIcon": "",
+        "appendButton": false,
+        "appendButtonDisabled": false,
+        "buttonIcon": "custom-search",
+        "onCreated": "",
+        "onMounted": "",
+        "onInput": "",
+        "onChange": "",
+        "onFocus": "",
+        "onBlur": "",
+        "onValidate": "",
+        "onAppendButtonClick": ""
+      },
+      "attrs": [
+        {
+          "name": "width",
+          "title": "长度",
+          "type": "number",
+          "remark": "长度2"
+        },
+        {
+          "name": "defaultValue",
+          "title": "默认值",
+          "type": "text",
+          "remark": "默认值"
+        },
+        {
+          "name": "required",
+          "title": "必填",
+          "type": "check",
+          "remark": "必填"
+        },
+        {
+          "name": "disabled",
+          "title": "禁用",
+          "type": "disabled-editor",
+          "remark": "禁用"
+        },
+        {
+          "name": "requiredMessage",
+          "title": "必填信息",
+          "type": "droplist",
+          "remark": "必填信息",
+          "options": [
+            {
+              "value": "请输入1",
+              "label": "请输入2",
+              "_X_OPTION_KEY": "opt_42"
+            }
+          ]
+        },
+        {
+          "name": "placeholder",
+          "title": "输入框占位文本",
+          "type": "text",
+          "remark": "输入框占位文本"
+        },
+        {
+          "name": "clearable",
+          "title": "是否可清空",
+          "type": "check",
+          "remark": "是否可清空"
+        },
+        {
+          "name": "patternCheck",
+          "title": "正则校验",
+          "type": "check",
+          "remark": "正则校验"
+        },
+        {
+          "name": "pattern",
+          "title": "正则表达式",
+          "type": "text",
+          "remark": "正则表达式"
+        },
+        {
+          "name": "patternMessage",
+          "title": "正则提示",
+          "type": "text",
+          "remark": "正则提示"
+        },
+        {
+          "name": "prefix-icon",
+          "title": "头部图标",
+          "type": "text",
+          "remark": "输入框头部图标"
+        },
+        {
+          "name": "suffix-icon",
+          "title": "尾部图标",
+          "type": "text",
+          "remark": "尾部图标"
+        },
+        {
+          "name": "disabled",
+          "title": "禁用",
+          "type": "check",
+          "remark": "禁用"
+        },
+        {
+          "name": "hidden",
+          "title": "隐藏",
+          "type": "check",
+          "remark": "隐藏"
+        }
+      ],
+      "events": [
+        {
+          "name": "onBlur",
+          "title": "聚焦事件",
+          "remark": "聚焦事件",
+          "params": [
+            "event"
+          ]
+        },
+        {
+          "name": "onChange",
+          "title": "变化事件",
+          "remark": "变化事件1",
+          "params": [
+            "event"
+          ]
+        }
+      ],
+      "id": "input101853"
+    }
+  ],
+  "formConfig": {
+    "modelName": "formData",
+    "refName": "vForm",
+    "rulesName": "rules",
+    "labelWidth": 120,
+    "labelPosition": "right",
+    "size": "",
+    "labelAlign": "label-right-align",
+    "cssCode": "",
+    "customClass": [],
+    "functions": "",
+    "layoutType": "",
+    "jsonVersion": 3,
+    "onFormCreated": "",
+    "onFormMounted": "",
+    "onFormDataChange": ""
+  }
+}

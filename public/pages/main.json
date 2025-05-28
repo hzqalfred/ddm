@@ -1,0 +1,252 @@
+{
+  "type": "root",
+  "id": "l1",
+  "data": [
+    {
+      "type": "frame",
+      "ele": "container",
+      "id": "lcontainer",
+      "attr": {
+        "direction": "vertical"
+      },
+      "data": [
+        {
+          "type": "frame",
+          "ele": "header",
+          "id": "app_banner",
+          "class": "portal_head",
+          "style": "display: flex; height: 60px; background-color: #336699; color: #ffffff;",
+          "data": [
+            {
+              "type": "layout",
+              "ele": "row",
+              "id": "banner_row",
+              "justify": "space-between",
+              "style": "width: 100%; padding: 0 20px; align-items: center;",
+              "data": [
+                {
+                  "type": "layout",
+                  "ele": "col",
+                  "id": "banner_logo_col",
+                  "span": 8,
+                  "data": [
+                    {
+                      "type": "control",
+                      "ele": "span",
+                      "id": "app_title",
+                      "value": "CPII-RUNTIME",
+                      "style": "font-size: 18px; font-weight: bold; color: white; cursor: pointer;",
+                      "click": "navigateToHome"
+                    }
+                  ]
+                },
+                {
+                  "type": "layout",
+                  "ele": "col",
+                  "id": "banner_actions_col",
+                  "span": 4,
+                  "style": "display: flex; justify-content: flex-end; gap: 15px;",
+                  "data": [
+                    {
+                      "type": "control",
+                      "ele": "btngroup",
+                      "id": "banner_buttons",
+                      "data": [
+                        {
+                          "type": "text",
+                          "id": "btn_menu_toggle",
+                          "icon": "Menu",
+                          "click": "toggleMenuDrawer",
+                          "style": "margin-right:20px",
+                          "value": ""
+                        },
+                        {
+                          "type": "text",
+                          "id": "btn_settings",
+                          "icon": "Setting",
+                          "click": "toggleLayoutSettings",
+                          "style": "margin-right:20px",
+                          "value": ""
+                        },
+                        {
+                          "type": "text",
+                          "id": "btn_logout",
+                          "icon": "SwitchButton",
+                          "click": "handleLogout",
+                          "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "ele": "main",
+          "id": "main_layout",
+          "class": "main-layout",
+          "style": "display: flex; flex: 1; overflow: hidden;padding:0",
+          "data": [
+            {
+              "type": "frame",
+              "ele": "aside",
+              "id": "left_menu_container",
+              "width": "240px",
+              "style": "height: 100%; background-color: #f8f8f8; border-right: 1px solid #eaeaea; display: flex; flex-direction: column;",
+              "data": [
+                {
+                  "type": "layout",
+                  "ele": "row",
+                  "id": "left_menu_search_row",
+                  "style": "padding: 16px 12px; border-bottom: 1px solid #eaeaea;",
+                  "data": [
+                    {
+                      "type": "control",
+                      "ele": "txtsearch",
+                      "id": "menu_search",
+                      "placeholder": "搜索",
+                      "input": "handleMenuSearch"
+                    }
+                  ]
+                },
+                {
+                  "type": "control",
+                  "ele": "menu",
+                  "id": "left_menu"
+                }
+              ]
+            },
+            {
+              "type": "frame",
+              "ele": "main",
+              "id": "lmain",
+              "width": "100%",
+              "height": "100%",
+              "style": "padding: 0;overflow: auto;",
+              "data": [
+                {
+                  "type": "frame",
+                  "ele": "main",
+                  "style": "padding-top: 0px",
+                  "id": "content-layout",
+                  "data": [
+                    {
+                      "type": "control",
+                      "ele": "taskbar",
+                      "id": "lheader_row_taskbar",
+                      "data": []
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "frame",
+          "ele": "dialog",
+          "id": "layout_config_panel",
+          "title": "布局配置",
+          "visible": false,
+          "data": [
+            {
+              "type": "layout",
+              "ele": "row",
+              "id": "config_panel_content",
+              "data": [
+                {
+                  "type": "layout",
+                  "ele": "col",
+                  "id": "config_items",
+                  "span": 24,
+                  "data": [
+                    {
+                      "type": "layout",
+                      "ele": "row",
+                      "id": "config_item_layout_mode",
+                      "style": "margin-bottom: 20px;",
+                      "data": [
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "config_item_layout_mode_label",
+                          "span": 24,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "layout_mode_label",
+                              "value": "布局模式"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "config_item_layout_mode_radio",
+                          "span": 24,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "btngroup",
+                              "id": "layout_mode_buttons",
+                              "data": [
+                                {
+                                  "type": "primary",
+                                  "id": "btn_default_layout",
+                                  "click": "setLayoutModeDefault",
+                                  "value": "经典"
+                                },
+                                {
+                                  "type": "default",
+                                  "id": "btn_wins_layout",
+                                  "click": "setLayoutModeWins",
+                                  "value": "Windows"
+                                }
+                              ]
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "layout",
+              "ele": "row",
+              "id": "config_panel_footer",
+              "justify": "end",
+              "style": "padding-top: 20px; border-top: 1px solid #eaeaea;",
+              "data": [
+                {
+                  "type": "control",
+                  "ele": "btngroup",
+                  "id": "config_panel_buttons",
+                  "data": [
+                    {
+                      "type": "default",
+                      "id": "btn_cancel_config",
+                      "click": "cancelLayoutSettings",
+                      "value": "取消"
+                    },
+                    {
+                      "type": "primary",
+                      "id": "btn_apply_config",
+                      "click": "applyLayoutSettings",
+                      "value": "应用"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

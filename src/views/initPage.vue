@@ -260,7 +260,7 @@
               </el-form>
             </el-collapse-item>
 
-            <el-collapse-item title="日志路径配置" name="3">
+            <el-collapse-item title="日志配置" name="3">
               <el-form
                 inline
                 :model="dataSource.log"
@@ -269,9 +269,17 @@
               >
                 <el-form-item label="日志路径">
                   <el-input
-                    style="width: 145px;"
+                    style="width: 290px;"
                     v-model="dataSource.log.path"
                     placeholder="请输入日志路径"
+                  />
+                </el-form-item>
+
+                 <el-form-item label="数据归档">
+                  <el-input
+                    style="width: 290px;"
+                    v-model="dataSource.log.dataSvrUrl"
+                    placeholder="请输入数据归档日志服务URL"
                   />
                 </el-form-item>
               </el-form>
@@ -331,6 +339,7 @@ const dataSource = ref({
   },
   log: {
     path: "",
+    dataSvrUrl:""
   },
 });
 

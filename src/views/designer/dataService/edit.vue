@@ -11,6 +11,7 @@
         <el-button type="primary" :icon="Select" @click="saveDataService"
           >保存</el-button
         >
+        <el-button type="warning" :icon="VideoPlay" @click="testEventDialogWin">测试</el-button>
       </div>
     </template>
     <el-form
@@ -139,18 +140,83 @@
       </div>
     </template>
   </el-dialog>
+  <el-dialog
+      v-model="testEventDialogVisible"
+      title="测试数据服务方法"
+      width="1600"
+      :before-close="testEventClose"
+  >
+    <el-form
+        ref="testEventFormRef"
+        :model="testEventForm"
+        label-width="240px"
+        status-icon
+    >
+
+      <el-row>
+        <el-col :span="12">
+          <el-select v-model="replaceText" style="width: 240px;margin: 0 10px 10px;" size="small">
+            <el-option
+                v-for="(value, key) in replaceObj"
+                :key="key"
+                :value="value"
+                :label="key"
+            ></el-option>
+          </el-select>
+          <el-button
+              size="small"
+              style="margin: 0 10px 10px;"
+              type="primary"
+              @click="replaceRequestBody">重置请求
+          </el-button>
+          <code-editor
+              ref="testEventFormEditorRef"
+              v-model="testEventForm.requestBody"
+              mode="json"
+              :readonly="false"
+              height="300px"
+
+          />
+        </el-col>
+        <div class="dot-divider"></div>
+        <el-col :span="11">
+          <el-button
+              size="small"
+              style="margin: 0 10px 10px;"
+              type="primary"
+              @click="clearResultBody">清空返回
+          </el-button>
+          <code-editor
+              ref="testResultFormEditorRef"
+              v-model="testEventForm.resultBody"
+              mode="json"
+              :readonly="true"
+              height="300px"
+          />
+        </el-col>
+      </el-row>
+
+    </el-form>
+    <template #footer>
+      <div class="dialog-footer">
+        <el-button @click="testEventClose">关闭</el-button>
+        <el-button type="primary" @click="testEventSubmit">TEST</el-button>
+      </div>
+    </template>
+  </el-dialog>
   <JavaEditor ref="javaEditorRef" @selectJavaCode="selectJavaCode" />
   <JsonEditor ref="jsonEditorRef" @selectJsonCode="selectJsonCode" />
 </template>
 <script setup>
-import { reactive, ref, watch, defineProps } from "vue";
-import { saveEvent } from "@/api/dataService";
+import {reactive, ref, watch, defineProps} from "vue";
+import {saveEvent, testEvent} from "@/api/dataService";
 
 import VisualMethod from "@/core/components/VisualMethod/index.vue";
-import { Close, Select, Search } from "@element-plus/icons-vue";
+import {Close, Select, VideoPlay} from "@element-plus/icons-vue";
 import { createMessageHandler } from "@/core/Message";
 import JavaEditor from "@/core/components/CodeEditor/javaEditor.vue";
 import JsonEditor from "@/core/components/CodeEditor/jsonEditor.vue";
+import CodeEditor from "@/core/components/CodeEditor/index.vue";
 
 const $message = createMessageHandler();
 const props = defineProps({
@@ -165,6 +231,48 @@ const $Graph = ref(null);
 const xChart = ref("");
 const resultParams = ref([]);
 const requestParams = ref([]);
+const testEventFormEditorRef = ref(null);
+const testResultFormEditorRef = ref(null);
+
+let testEventDialogVisible = ref(false);
+let testEventForm = reactive({
+  resultBody: '',
+  requestBody: '{}'
+})
+const replaceText = ref('')
+const replaceObj = ref({
+  "保存": "{\n" +
+      "    \"data\": [\n" +
+      "        {\n" +
+      "            \"test_column\": \"testValue\"\n" +
+      "        }\n" +
+      "    ]\n" +
+      "}",
+  "删除": "{\n" +
+      "    \"data\": [\n" +
+      "        {\n" +
+      "            \"xxx_id\": \"1111111\"\n" +
+      "        }\n" +
+      "    ]\n" +
+      "}",
+  "查询": "{\n" +
+      "    \"pageSize\": 10,\n" +
+      "    \"pageNum\": 1,\n" +
+      "    \"sortItems\": [\n" +
+      "        {\n" +
+      "            \"sortColumn\": \"xxxx_column\",\n" +
+      "            \"asc\": true\n" +
+      "        }\n" +
+      "    ],\n" +
+      "    \"searchItems\": [\n" +
+      "        {\n" +
+      "            \"searchColumn\": \"xxxx_column\",\n" +
+      "            \"operator\": \"like\",\n" +
+      "            \"searchValue\": \"searchValue\"\n" +
+      "        }\n" +
+      "    ]\n" +
+      "}",
+});
 
 let methodEditVisible = ref(false);
 let editFormRef = ref({});
@@ -270,6 +378,39 @@ const saveDataService = async () => {
   });
 };
 
+const testEventSubmit = async () => {
+  let data = await $Graph.value.getSaveData();
+  editForm.exChart = JSON.stringify({cells:data.cells});
+  editForm.requestParams = data.requestParams;
+  editForm.resultParams = data.resultParams;
+  let params = {
+    eventData: JSON.stringify(editForm),
+    objectCode: props.optType.objectCode,
+    ...props.moduleData,
+    requestBody: testEventForm.requestBody
+  };
+  testEvent(params).then((res) => {
+    testResultFormEditorRef.value.setValue(JSON.stringify(res, null, 2));
+    if (res.code === "200") {
+      $message.notifySuccess(res.msg);
+    } else {
+      $message.notifyError(res.msg);
+    }
+  })
+};
+
+const replaceRequestBody = () => {
+  if (replaceText.value === '') {
+    testEventFormEditorRef.value.setValue('{}');
+  } else {
+    testEventFormEditorRef.value.setValue(replaceText.value);
+  }
+}
+
+const clearResultBody = () => {
+  testResultFormEditorRef.value.setValue('');
+}
+
 let editCol = ref("");
 let javaEditorRef = ref();
 let openJavaCode = (editName, code) => {
@@ -288,6 +429,14 @@ let openJsonCode = (editName, code) => {
 let selectJsonCode = (code) => {
   editForm[editCol.value] = code;
 };
+
+let testEventClose = () => {
+  testEventDialogVisible.value = false
+}
+
+let testEventDialogWin = () => {
+  testEventDialogVisible.value = true
+}
 
 defineExpose({
   openEditDialog,
@@ -325,5 +474,16 @@ defineExpose({
   .CodeMirror-foldgutter {
     width: 0;
   }
+}
+.dot-divider {
+  width: 1px;
+  background: repeating-linear-gradient(
+      to bottom,
+      #909399,
+      #909399 2px,
+      transparent 2px,
+      transparent 6px
+  );
+  margin: 0 10px;
 }
 </style>

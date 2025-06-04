@@ -5,7 +5,14 @@
       v-model="selectNav"
       :options="navList"
       @click="handleMenuClick"
-    ></vxe-menu>
+    >
+      <template #option="{ option }">
+        <div>
+          <svg-icon size="16px" :iconClass="option.icon"></svg-icon>
+          <span style="margin-left: 2px;">{{ option.title }}</span>
+        </div>
+      </template>
+    </vxe-menu>
   </div>
 </template>
 
@@ -13,6 +20,7 @@
 import { onMounted, inject, reactive, ref, computed } from "vue";
 import PageFactory from "@/core/PageFactory";
 import { getMenu } from "@/api/init";
+import SvgIcon from "@/core/components/SvgIcon/index.vue";
 
 // 获取父页面数据
 const MenuRef = ref(null);
@@ -27,6 +35,7 @@ const transformMenuData = (menuData) => {
     const menuItem = {
       title: item.menuName || item.functionName,
       name: item.menuId || item.functionId,
+      icon: item.icon,
       item: item,
       children: [],
     };

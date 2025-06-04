@@ -22,7 +22,7 @@
               @submit.prevent
             >
               <!-- 字段标识输入框 -->
-              <el-form-item label="字段标识" v-if="selectedWidget.options">
+              <el-form-item label="控件编号" v-if="selectedWidget.options">
                 <el-input
                   size="mini"
                   v-model="selectedWidget.options.name"
@@ -469,23 +469,27 @@ export default {
         };
       });
     },
-    selectedWidgetOptions(){
-      let selected = setting.find(x=>x.type == this.selectedWidget.type )
-      let data = Object.assign({},this.selectedWidget?.options,selected?.options)
-      console.log(data)
-      console.log(selected)
-      if(selected?.options){
-        for(let key in selected.options){
-          if(this.selectedWidget?.options[key] == undefined){
-            this.selectedWidget.options[key] = data[key]
+    selectedWidgetOptions() {
+      let selected = setting.find((x) => x.type == this.selectedWidget.type);
+      let data = Object.assign(
+        {},
+        this.selectedWidget?.options,
+        selected?.options
+      );
+      console.log(data);
+      console.log(selected);
+      if (selected?.options) {
+        for (let key in selected.options) {
+          if (this.selectedWidget?.options[key] == undefined) {
+            this.selectedWidget.options[key] = data[key];
           }
         }
       }
-      if(selected?.attrs){
-        this.selectedWidget.attrs = selected.attrs
+      if (selected?.attrs) {
+        this.selectedWidget.attrs = selected.attrs;
       }
-      return data
-    }
+      return data;
+    },
   },
   watch: {
     "designer.selectedWidget"(val) {
@@ -508,6 +512,14 @@ export default {
       handler: "saveDesignerStep",
       immediate: true,
     },
+    globalDsv: {
+      deep: true,
+      handler(val) {
+        if (val?.param) {
+          this.getDataService();
+        }
+      },
+    },
   },
   created() {
     // 监听 form-css-updated 事件，更新 CSS 类
@@ -515,13 +527,13 @@ export default {
       this.designer.setCssClassList(cssClassList);
     });
   },
+
   mounted() {
     // 初始化时设置选项卡
     this.activeTab = this.designer.selectedWidget ? "1" : "2";
     this.adjustScrollerHeight();
     // 监听窗口大小变化，调整滚动条高度
-    setTimeout(() => {
-      this.getDataService();
+    setTimeout(async () => {
       if (this.globalDsv?.param?.modelCode)
         this.modelCode = this.globalDsv?.param?.modelCode;
     }, 1500);

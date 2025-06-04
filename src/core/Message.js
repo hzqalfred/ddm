@@ -48,16 +48,16 @@ export function createMessageHandler(options = {}) {
     confirmCallback = null,
     cancelCallback = null
   ) {
-     ElMessageBox.prompt(message, title, {
-    confirmButtonText: '确认',
-    cancelButtonText: '取消'
-  })
-    .then(({ value }) => {
-     confirmCallback && confirmCallback(value)
+    ElMessageBox.prompt(message, title, {
+      confirmButtonText: "确认",
+      cancelButtonText: "取消",
     })
-    .catch(() => {
-      cancelCallback && cancelCallback()
-    })
+      .then(({ value }) => {
+        confirmCallback && confirmCallback(value);
+      })
+      .catch(() => {
+        cancelCallback && cancelCallback();
+      });
   }
   // 显示消息
   function showMessage(
@@ -95,6 +95,12 @@ export function createMessageHandler(options = {}) {
       .catch(() => {
         if (cancelCallback) cancelCallback(); // 调用取消按钮的回调
       });
+  }
+
+  function notifyMsg(message, flag) {
+    return flag
+      ? showMessage("success", message)
+      : showMessage("error", message);
   }
 
   // 成功消息
@@ -152,6 +158,7 @@ export function createMessageHandler(options = {}) {
     confirmDelete,
     showMessage,
     showMessageBox,
+    notifyMsg,
     notifySuccess,
     notifyError,
     notifyWarning,

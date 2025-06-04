@@ -322,19 +322,19 @@
               shadow="hover"
               class="ft-card"
             >
-              <el-popover placement="right" trigger="hover">
+              <!-- <el-popover placement="right" trigger="hover">
                 <template #reference>
                   <img :src="ft.imgUrl" style="width: 200px" />
                 </template>
                 <img :src="ft.imgUrl" style="height: 600px;width: 720px" />
-              </el-popover>
+              </el-popover> -->
               <div class="bottom clear-fix">
                 <span class="ft-title">#{{ idx + 1 }} {{ ft.title }}</span>
                 <el-button
                   link
                   type="primary"
                   class="right-button"
-                  @click="loadFormTemplate(ft.jsonUrl)"
+                  @click="loadFormTemplate(ft.type)"
                 >
                   {{ i18nt("designer.hint.loadFormTemplate") }}
                 </el-button>
@@ -350,7 +350,7 @@
       <div>功能设计</div>
     </template>
     <function-generator
-      :modData="globalDsv?.param || {}"
+      :modData="modData || {}"
       @generateData="reloadJson"
     ></function-generator>
   </vxe-modal>
@@ -390,6 +390,13 @@ export default {
     expandList: Array,
     globalDsv: Object,
   },
+  computed: {
+    modData() {
+      return Object.assign({}, this.globalDsv?.param, {
+        functionType: this.loadType,
+      });
+    },
+  },
   inject: ["getBannedWidgets", "getDesignerConfig"],
   data() {
     return {
@@ -410,6 +417,7 @@ export default {
       formTemplates: formTemplates,
       originMoveFields: {},
       showGuide: false,
+      loadType: "",
     };
   },
   created() {
@@ -562,10 +570,12 @@ export default {
       this.designer.addFieldByDbClick(widget);
     },
     reloadJson(json) {
-      if(json) this.designer.loadFormJson(json);
-      this.showGuide = false
+      if (json) this.designer.loadFormJson(json);
+      this.showGuide = false;
     },
-    loadFormTemplate(jsonUrl) {
+    loadFormTemplate(type) {
+      
+      this.loadType = type;
       this.showGuide = true;
     },
   },

@@ -1,27 +1,37 @@
-<!--
-/**
- * author: vformAdmin
- * email: vdpadmin@163.com
- * website: https://www.vform666.com
- * date: 2021.08.18
- * remark: 如果要分发VForm源码，需在本文件顶部保留此文件头信息！！
- */
--->
-
 <template>
   <container-wrapper :designer="designer" :widget="widget" :parent-widget="parentWidget" :parent-list="parentList" :index-of-parent-list="indexOfParentList">
-    <div :key="widget.id" class="dialog-container" :class="{ selected: selected }" @click.stop="selectWidget(widget)">
+    <vxe-card
+      :key="widget.id"
+      class="card-container"
+      @click.stop="selectWidget(widget)"
+      :shadow="widget.options.shadow"
+      :style="{ width: widget.options.cardWidth + '!important' || '' }"
+      :class="[selected ? 'selected' : '', !!widget.options.folded ? 'folded' : '', customClass]"
+    >
+      <template #header>
+        <div class="clear-fix" @click="toggleCard">
+          <span>{{ widget.options.label }}</span>
+
+          <i v-if="widget.options.showFold" class="float-right">
+            <template v-if="!widget.options.folded">
+              <vxe-icon name="arrow-down"></vxe-icon>
+            </template>
+            <template v-else>
+              <vxe-icon name="arrow-up"></vxe-icon>
+            </template>
+          </i>
+        </div>
+      </template>
       <draggable
         :list="widget.widgetList"
         item-key="id"
         v-bind="{ group: 'dragGroup', ghostClass: 'ghost', animation: 200 }"
+        handle=".drag-handler"
         tag="transition-group"
         :component-data="{ name: 'fade' }"
-        handle=".drag-handler"
-        @end="onDragEnd"
         @add="evt => onContainerDragAdd(evt, widget.widgetList)"
-        @update="onDragUpdate"
-        :move="checkMove"
+        @update="onContainerDragUpdate"
+        :move="checkContainerMove"
       >
         <template #item="{ element: subWidget, index: swIdx }">
           <div class="form-widget-list">
@@ -34,6 +44,7 @@
                 :parent-list="widget.widgetList"
                 :index-of-parent-list="swIdx"
                 :parent-widget="widget"
+                :design-state="true"
               ></component>
             </template>
             <template v-else>
@@ -51,32 +62,8 @@
           </div>
         </template>
       </draggable>
-      
-    </div>
-    
+    </vxe-card>
   </container-wrapper>
-
-  <vxe-drawer
-      ref="fieldEditor"
-      v-model="drawerVisible"
-      @show="handleOnShow"
-
-      :size="widget.options.comsize"
-      :position="widget.options.position || 'right'"
-      :width="['left', 'right'].includes(widget.options.position || 'right') ? (widget.options.width || '40%') : null"
-      :height="['top', 'bottom'].includes(widget.options.position || 'right') ? (widget.options.height || '40%') : null"
-      :padding="widget.options.padding"
-      :mask-closable="widget.options.maskClosable"
-      :title="widget.options.title"
-      :resize="widget.options.resize"
-      :esc-closable="widget.options.escClosable"
-    >
-    <div>侧滑抽屉测试！！！</div>
-    <div>侧滑抽屉使用：this.refList.{{widget.id}}.$refs.fieldEditor.open();</div>
-  </vxe-drawer>
-  <div style="text-align: right;">
-    <vxe-button content="侧滑抽屉测试" @click="drawerVisible = true"></vxe-button>
-  </div>
 </template>
 
 <script>
@@ -85,15 +72,18 @@ import containerMixin from '@/core/components/VForm/form-designer/form-widget/co
 import ContainerWrapper from '@/core/components/VForm/form-designer/form-widget/container-widget/container-wrapper.vue'
 import FieldComponents from '@/core/components/VForm/form-designer/form-widget/field-widget/index'
 import refMixinDesign from '@/core/components/VForm/form-designer/refMixinDesign'
+import { ArrowDown, ArrowUp } from '@element-plus/icons-vue'
 
 export default {
-  name: 'drawer-widget',
+  name: 'card-widget',
   componentName: 'ContainerWidget',
   mixins: [i18n, containerMixin, refMixinDesign],
   inject: ['refList'],
   components: {
     ContainerWrapper,
-    ...FieldComponents
+    ...FieldComponents,
+    ArrowDown,
+    ArrowUp
   },
   props: {
     widget: Object,
@@ -111,48 +101,68 @@ export default {
       return this.widget.options.customClass || ''
     }
   },
-  data() {
-    return {
-      drawerVisible: false
-    }
-  },
-  watch: {
-    //
-  },
   created() {
-    console.log(this.$refs)
     this.initRefList()
   },
-  mounted() {
-    //
-  },
   methods: {
-    onDragUpdate() {
-      this.designer.emitHistoryChange()
+    /**
+     * 检查接收哪些组件拖放，如不接受某些组件拖放，则根据组件类型判断后返回false
+     * @param evt
+     * @returns {boolean}
+     */
+    checkContainerMove(evt) {
+      return true
     },
-    onDragEnd(obj, subList) {
-      console.log(this.widget)
-      //
+
+    toggleCard() {
+      this.widget.options.folded = !this.widget.options.folded
     },
-    onDragAdd(evt, subList) {
-      console.log(evt, subList)
-      console.log(this.widget)
-    },
-    checkMove() {}
+
+    /**
+     * 设置折叠/打开状态
+     * @param folded
+     */
+    setFolded(folded) {
+      this.widget.options.folded = !!folded
+    }
   }
 }
 </script>
 
 <style lang="scss" scoped>
-div.dialog-container {
-  padding: 5px;
-  border: 2px dashed #cccccc;
-  box-sizing: border-box;
-  width: 100%;
-  min-height: 200px;
+.card-container.selected {
+  outline: 2px solid $mainColor !important;
 }
 
-.dialog-container.selected {
-  border: 2px dashed #cccccc;
+.card-container {
+  margin: 3px;
+
+  .form-widget-list {
+    min-height: 28px;
+  }
+}
+
+:deep(.vxe-card--header) {
+  padding: 10px 12px;
+}
+
+.folded :deep(.vxe-card--body) {
+  display: none;
+}
+
+.clear-fix:before,
+.clear-fix:after {
+  display: table;
+  content: '';
+}
+
+.clear-fix:after {
+  clear: both;
+}
+.clear-fix {
+  width: 100%;
+}
+.float-right {
+  float: right;
 }
 </style>

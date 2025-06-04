@@ -48,6 +48,16 @@
             />
           </template>
         </vxe-column>
+        <vxe-column field="icon" title="图标" width="80">
+          <template #default="{ row }">
+            <select-icon
+            type="icon"
+              style="margin-left:10px;"
+              @update:modelValue="(val) => iconSelect(row, val)"
+              :modelValue="row?.icon || ''"
+            ></select-icon>
+          </template>
+        </vxe-column>
         <vxe-column title="操作" width="150">
           <template #default="{ row }">
             <vxe-button
@@ -292,8 +302,12 @@ import {
   deleteMenu,
 } from "@/api/devManage";
 import messageHandler from "@/core/Message";
+import SelectIcon from "@/core/components/SelectIcon/index.vue";
 
 export default {
+  components: {
+    SelectIcon,
+  },
   data() {
     return {
       menuData: [], // 树形菜单数据
@@ -333,6 +347,9 @@ export default {
     this.functionModules = suiteData.data;
   },
   methods: {
+    iconSelect(row, val) {
+      row.icon = val;
+    },
     // 将扁平数据转换为树形结构（兼容原有API数据结构）
     buildMenuTree(flatData) {
       if (!flatData || !Array.isArray(flatData)) {
@@ -862,7 +879,7 @@ export default {
       this.selectedConfigFunction = null;
       // 如果菜单已经有配置的功能，预选中对应的功能
       if (menu.functionCode) {
-        debugger;
+        
         const existingFunction = this.currentFunctions.find(
           (func) => func.functionCode === menu.functionCode
         );
@@ -892,7 +909,7 @@ export default {
       // 将选中的功能信息赋值给当前菜单
       this.currentConfigMenu.functionCode = this.selectedConfigFunction.functionCode;
       this.currentConfigMenu.functionName = this.selectedConfigFunction.functionName;
-
+      console.log(this.currentConfigMenu);
       // 刷新表格数据
       this.$refs.MenuTable.loadData(this.menuData);
 

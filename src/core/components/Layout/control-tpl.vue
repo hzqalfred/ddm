@@ -116,6 +116,9 @@ import devManageList from "@/views/devManage/devManageList.vue";
 import devHistory from "@/views/devManage/devHistory.vue";
 import devSetting from "@/views/devManage/devSetting.vue";
 import devMenu from "@/views/devManage/devMenu.vue";
+import loggingList from "@/views/devManage/loggingList.vue";
+import loggingInfo from "@/views/devManage/loggingInfo.vue";
+import loggingError from "@/views/devManage/loggingError.vue";
 
 import suiteManageList from "@/views/idk/suiteManageList.vue";
 import suiteManage from "@/views/idk/suiteManage.vue";
@@ -192,6 +195,12 @@ const getElementComponent = (item) => {
       return functiongenerator;
     case "suiteManage":
       return suiteManage;
+    case "loggingList":
+      return loggingList;  
+    case "loggingInfo":
+      return loggingInfo;
+    case "loggingError":
+      return loggingError;          
     default:
       return "div";
   }

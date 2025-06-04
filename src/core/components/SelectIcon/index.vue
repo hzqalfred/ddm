@@ -1,6 +1,8 @@
 <template>
   <div class="content">
+    <!-- type为input时显示input框 -->
     <el-input
+      v-if="type === 'input'"
       style="width: 100%"
       v-model="inputIconValue"
       readonly
@@ -8,9 +10,22 @@
       @click="visible = !visible"
     >
       <template #prepend>
-        <SvgIcon :size="20" :iconClass="inputIconValue" />
+        <SvgIcon :size="10" :iconClass="inputIconValue" />
       </template>
     </el-input>
+    
+    <!-- type为icon时显示图标 -->
+    <div 
+      v-else-if="type === 'icon'" 
+      class="icon-trigger"
+      @click="visible = !visible"
+    >
+      <SvgIcon 
+        :size="20" 
+        :iconClass="inputIconValue || 'default-icon'" 
+      />
+    </div>
+
     <el-popover
       shadow="none"
       :visible="visible"
@@ -63,24 +78,35 @@
 <script setup>
 import SvgIcon from "@/core/components/SvgIcon/index.vue";
 import { onMounted, toRef, ref } from "vue";
+
 const visible = ref(false); // 弹窗显示状态
 const allIconNames = ref([]); // 所有的图标名称集合
 const filterIconNames = ref([]); // 筛选之后名称集合
 const filterValue = ref(""); // 筛选的值
+
 // 修改父组件关联的值
 const emit = defineEmits(["update:modelValue"]);
+
 const props = defineProps({
   modelValue: {
     type: String,
     require: false,
     default: "",
   },
+  type: {
+    type: String,
+    default: "input", // 默认为input模式
+    validator: (value) => ["input", "icon"].includes(value)
+  }
 });
+
 const inputIconValue = toRef(props, "modelValue");
+
 // 加载 icon
 onMounted(() => {
   loadAllIcons();
 });
+
 // 获取所有图标
 const loadAllIcons = () => {
   const icons = import.meta.glob("@/assets/svg/*.svg");
@@ -90,6 +116,7 @@ const loadAllIcons = () => {
   }
   filterIconNames.value = allIconNames.value;
 };
+
 // 筛选 icon
 const filterIcon = () => {
   if (filterValue.value) {
@@ -100,6 +127,7 @@ const filterIcon = () => {
     filterIconNames.value = allIconNames.value;
   }
 };
+
 // 选择 icon
 const handleSelect = (iconName) => {
   emit("update:modelValue", iconName);
@@ -117,6 +145,24 @@ const closeIcon = () => {
 .el-divider--horizontal {
   margin: 10px auto !important;
 }
+
+.icon-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border: 1px solid #dcdfe6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    border-color: var(--el-color-primary);
+    color: var(--el-color-primary);
+  }
+}
+
 .icon-list {
   display: flex;
   flex-wrap: wrap;

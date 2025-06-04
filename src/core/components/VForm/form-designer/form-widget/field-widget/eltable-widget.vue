@@ -399,6 +399,7 @@ export default {
 
     // 点击单元格事件
     handleClickCell({ $table }) {
+      
       const currentRow = $table.getCurrentRecord();
       if (this.field.options.isSelectType == "radio") {
         $table.setRadioRow(currentRow);

@@ -60,3 +60,16 @@ export let deleteMenuFunction = (data) => {
 export let deleteMenu = (data) => {
   return request.postData("/runtimeManage/deleteMenu", data);
 };
+
+export let logfile = (data) => {
+  return request.fetchData("/runtimeManage/inspect/logs/logfile", data);
+};
+
+export let errorFile = (data) => {
+  return request.fetchData("/runtimeManage/inspect/logs/errorFile", data);
+};
+
+export let qDataLogging = (data) => {
+  data.ISFORMDATA = '1'
+  return request.postData("/runtimeManage/queryDataLogging", data);
+};

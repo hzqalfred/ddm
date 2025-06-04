@@ -32,6 +32,11 @@ export let deleteEvent = data => {
 return request.postData('/design/data/service/event//delete',data)
 }
 
+export let testEvent = data => {
+    data.ISFORMDATA = '1'
+    return request.postData('/design/data/service/event/test', data)
+}
+
 export let tranlateStatement = data => {
   data.ISFORMDATA = '1'
 return request.postData('/design/data/service/translate',data)

@@ -52,7 +52,7 @@ onMounted(async () => {
     let selected = menu.find(
       (x) => x.functionCode == functionCode && x.moduleCode == moduleCode
     );
-    debugger;
+    
     auth.setEnabled(initData.authenticationEnabled);
 
     // 如果需要权限但未登录，重定向到登录页

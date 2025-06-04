@@ -2,7 +2,7 @@
   <container-item-wrapper :widget="widget">
     <vxe-drawer
       ref="fieldEditor"
-      v-model="drawerVisible"
+      v-model="popupwinVisible"
       @show="handleOnShow"
 
       :size="widget.options.comsize"
@@ -88,7 +88,7 @@ import eventBus from "@/core/utils/event-bus";
 import { comUtils } from "@/core/comUtils";
 
 export default {
-  name: "drawer-item",
+  name: "popupwin-item",
   componentName: "ContainerItem",
   mixins: [emitter, i18n, refMixin, containerItemMixin],
   components: {
@@ -108,7 +108,7 @@ export default {
   ],
   data() {
     return {
-      drawerVisible: false,
+      popupwinVisible: false,
       dataCenter: this.getDataCenter(),
       formConfig: {},
       comUtils: comUtils(this),

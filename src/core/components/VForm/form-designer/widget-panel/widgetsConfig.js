@@ -73,9 +73,9 @@ export const containers = [
     options: {
       name: "",
       label: "",
-      dialogWidth: "600px",
-      sourceData: "", // 源数据
-      targetData: "", // 目标数据
+      dialogWidth: "1400px",
+      // sourceData: "", // 源数据
+      // targetData: "", // 目标数据
       fullScreen: false,
       showClose: true,
       showModal: true,
@@ -96,6 +96,76 @@ export const containers = [
       onMounted: "",
     },
   }, //hzq
+
+  {
+    // 弹出窗口整合
+    type: "popupwin",
+    category: "container",
+    icon: "dialog",
+    widgetList: [],
+    options: {
+      name: "",
+      title: "", // 标题
+      type: "modal", // 类型（modal、drawer）
+
+
+      comsize: "", // 尺寸（空、medium、small、mini）
+      position: "right", // 位置（left、right、top、bottom）
+      width: "40%", // 宽度
+      height: "40%", // 高度
+      padding: false, // 内边距
+      maskClosable: false, // 点击遮罩是否关闭
+      resize: false, // 是否可拖拽
+      escClosable: false, // 按 Esc 键是否关闭
+      hidden: false,
+      customClass: "",
+      onMounted: "",
+      onShow: "", // 展开时触发
+
+
+    },
+  },
+
+
+  {
+    // 侧滑抽屉
+    type: "drawer",
+    category: "container",
+    icon: "drawer",
+    widgetList: [],
+    options: {
+      name: "",
+      title: "", // 标题
+      comsize: "", // 尺寸（空、medium、small、mini）
+      position: "right", // 位置（left、right、top、bottom）
+      width: "40%", // 宽度
+      height: "40%", // 高度
+      padding: false, // 内边距
+      maskClosable: false, // 点击遮罩是否关闭
+      resize: false, // 是否可拖拽
+      escClosable: false, // 按 Esc 键是否关闭
+      hidden: false,
+      customClass: "",
+      onMounted: "",
+      onShow: "", // 展开时触发
+    },
+  },
+  {
+    type: "card",
+    category: "container",
+    icon: "card",
+    widgetList: [],
+    options: {
+      name: "",
+      label: "card",
+      hidden: false,
+      folded: false,
+      showFold: true,
+      cardWidth: "100%",
+      shadow: "never",
+      customClass: "",
+    },
+  },
   // {
   //   type: "drawer",
   //   category: "container",
@@ -959,7 +1029,7 @@ export const basicFields = [
       filterWidth: 165, // 搜索框宽度
       filterTip: "输入关键字进行过滤", // 搜索框提示
       comsize: "", // 尺寸（空、medium、small、mini）
-      
+
       // transform: "level", // 数据结构，层级结构staircase、平级结构level
       data: [
         {
@@ -1211,8 +1281,6 @@ export const basicFields = [
     },
   },
 
-
-
   {
     type: "eltable",
     icon: "eltable",
@@ -1242,14 +1310,14 @@ export const basicFields = [
           label: "按钮",
           funId: "button",
           onClick: "",
-        }
+        },
       ],
       sortBy: [
         {
           sortColumn: "code", // 排序字段
           sortType: "asc", // 排序类型，asc升序、desc降序
           sortPriority: 1, // 排序优先级，数字越小越优先
-        }
+        },
       ],
 
       defaultValue: "",

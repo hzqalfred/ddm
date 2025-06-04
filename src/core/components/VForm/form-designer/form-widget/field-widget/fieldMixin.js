@@ -3,7 +3,7 @@ import FormValidators from "@/core/utils/validators";
 import request from "@/core/Request";
 import Message from "../../../../../Message";
 import eventBus from "@/core/utils/event-bus";
-import cpkEvent from "../../../../../cpkEvent";
+import { comUtils } from "@/core/comUtils";
 export default {
   inject: [
     "refList",
@@ -22,7 +22,7 @@ export default {
       showTip: false,
       request,
       Message,
-      cpkEvent,
+      comUtils: comUtils(this),
       isMouseInput: false,
     };
   },

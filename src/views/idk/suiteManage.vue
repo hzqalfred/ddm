@@ -1194,6 +1194,9 @@ const handleInterfaceDesign = async (row, type) => {
   const modelCode = res.data.modelCode;
   const modelSql = res.data.modelSql;
   const queryProgrammeList = res.data.queryProgrammeList;
+  const orderIndex = res.data.orderIndex;
+  const functionName = res.data.functionName;
+  const menuFunction = res.data.menuFunction;
 
   const param = {
     moduleName: formItemData.value.moduleName,
@@ -1202,8 +1205,15 @@ const handleInterfaceDesign = async (row, type) => {
     modelCode,
     modelSql,
     queryProgrammeList,
+    orderIndex,
+    functionName,
+    menuFunction,
     functionCode: row.functionCode,
     functionList: [row],
+    functionType: res.data.functionType,
+    tree: res.data.tree,
+    formColumnNums: res.data.formColumnNums,
+    functionId: row.functionId,
   };
   homePage.create({
     data: {

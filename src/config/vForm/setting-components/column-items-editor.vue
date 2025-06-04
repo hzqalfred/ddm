@@ -207,7 +207,7 @@
           </vxe-column>
 
           <!-- 编辑器 -->
-          <vxe-column field="editRenderName" title="编辑器" width="120">
+          <!-- <vxe-column field="editRenderName" title="编辑器" width="120">
             <template #default="{ row }">
               <el-select
                 v-model="row.editRenderName"
@@ -226,10 +226,10 @@
                 <el-option label="VxeColorPicker" value="VxeColorPicker" />
               </el-select>
             </template>
-          </vxe-column>
+          </vxe-column> -->
 
           <!-- 编辑器配置 -->
-          <vxe-column title="编辑器配置" width="120">
+          <!-- <vxe-column title="编辑器配置" width="120">
             <template #default="{ row }">
               <el-button
                 type="text"
@@ -245,10 +245,10 @@
                 }}
               </el-button>
             </template>
-          </vxe-column>
+          </vxe-column> -->
 
           <!-- 选择表格 -->
-          <vxe-column
+          <!-- <vxe-column
             field="selectTableRowSet"
             title="选择表格"
             width="140"
@@ -262,7 +262,7 @@
                 @input="markAsChanged"
               />
             </template>
-          </vxe-column>
+          </vxe-column> -->
 
           <!-- 默认值 -->
           <vxe-column
@@ -973,7 +973,7 @@ export default {
           ElMessage.warning("没有可导入的字段");
           return;
         }
-        debugger;
+        
         const fields = props.designer.fieldsList;
         const currentTopLevelCount = state.data.filter(
           (item) => item.level === 0

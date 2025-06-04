@@ -37,7 +37,7 @@ export default {
       'tab-pane': '选项卡页',
       'data-table': '数据表格',
       page: '页面', //hzq
-      dialog: '弹窗', //hzq
+      dialog: '弹出窗口', //hzq
       form: '表单', //hzq
       input: '单行输入',
       textarea: '多行输入',
@@ -63,6 +63,7 @@ export default {
       tree: '树形', //hzq
       eltable: '数据表格', //hzq
       drawer: '侧滑抽屉', //hzq
+      popupwin: '窗口合集',
       'grid-table': '组合表格', //hzq
       pagination: '分页', //hzq
       query: '搜索', //hzq
@@ -188,7 +189,7 @@ export default {
       commonSetting: '基础属性',
       advancedSetting: '其他属性',
       eventSetting: '事件属性',
-      uniqueName: '唯一名称',
+      uniqueName: '控件编号',
       editNameHelp: '修改名称后需按回车确认',
       label: '标签',
       displayType: '显示类型',

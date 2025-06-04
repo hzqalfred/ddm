@@ -1,13 +1,3 @@
-<!--
-/**
- * author: vformAdmin
- * email: vdpadmin@163.com
- * website: https://www.vform666.com
- * date: 2021.08.18
- * remark: 如果要分发VForm源码，需在本文件顶部保留此文件头信息！！
- */
--->
-
 <template>
   <container-wrapper :designer="designer" :widget="widget" :parent-widget="parentWidget" :parent-list="parentList" :index-of-parent-list="indexOfParentList">
     <div :key="widget.id" class="dialog-container" :class="{ selected: selected }" @click.stop="selectWidget(widget)">
@@ -51,16 +41,38 @@
           </div>
         </template>
       </draggable>
-      
     </div>
-    
   </container-wrapper>
 
-  <vxe-drawer
+
+  <div v-if="widget.options.type == 'modal'">
+    <vxe-modal
+      ref="fieldEditor"
+      show-footer
+      :padding="20"
+      height="70%"
+      :fullscreen="widget.options.fullScreen"
+      :width="widget.options.dialogWidth"
+      :show-close="widget.options.showClose"
+      :modal="widget.options.showModal"
+      :close-on-click-modal="widget.options.closeOnClickModal"
+      :close-on-press-escape="widget.options.closeOnPressEscape"
+      :center="widget.options.center"
+      :title="widget.options.label || ''"
+      v-model="dialogVisible"
+      @opened="handleOpen"
+      @close="handleClose"
+    >
+      <div>中央窗口测试！！！</div>
+      <div>中央窗口使用：this.refList.{{widget.id}}.$refs.fieldEditor.open();</div>
+    </vxe-modal>
+  </div>
+
+  <div v-if="widget.options.type == 'drawer'">
+    <vxe-drawer
       ref="fieldEditor"
       v-model="drawerVisible"
       @show="handleOnShow"
-
       :size="widget.options.comsize"
       :position="widget.options.position || 'right'"
       :width="['left', 'right'].includes(widget.options.position || 'right') ? (widget.options.width || '40%') : null"
@@ -71,11 +83,17 @@
       :resize="widget.options.resize"
       :esc-closable="widget.options.escClosable"
     >
-    <div>侧滑抽屉测试！！！</div>
-    <div>侧滑抽屉使用：this.refList.{{widget.id}}.$refs.fieldEditor.open();</div>
-  </vxe-drawer>
+      <div>侧滑窗口测试！！！</div>
+      <div>侧滑窗口使用：this.refList.{{widget.id}}.$refs.fieldEditor.open();</div>
+    </vxe-drawer>
+  </div>
+
+  <div v-if="widget.options.type == 'funwin'">
+  </div>
+
   <div style="text-align: right;">
-    <vxe-button content="侧滑抽屉测试" @click="drawerVisible = true"></vxe-button>
+    <vxe-button content="弹出试试吧~" @click="dialogVisible = true" v-if="widget.options.type == 'modal'"></vxe-button>
+    <vxe-button content="弹出试试吧~" @click="drawerVisible = true" v-if="widget.options.type == 'drawer'"></vxe-button>
   </div>
 </template>
 
@@ -87,7 +105,7 @@ import FieldComponents from '@/core/components/VForm/form-designer/form-widget/f
 import refMixinDesign from '@/core/components/VForm/form-designer/refMixinDesign'
 
 export default {
-  name: 'drawer-widget',
+  name: 'popupwin-widget',
   componentName: 'ContainerWidget',
   mixins: [i18n, containerMixin, refMixinDesign],
   inject: ['refList'],
@@ -113,18 +131,17 @@ export default {
   },
   data() {
     return {
-      drawerVisible: false
+      drawerVisible: false,
+      dialogVisible: false,
     }
   },
   watch: {
-    //
   },
   created() {
     console.log(this.$refs)
     this.initRefList()
   },
   mounted() {
-    //
   },
   methods: {
     onDragUpdate() {
@@ -132,7 +149,6 @@ export default {
     },
     onDragEnd(obj, subList) {
       console.log(this.widget)
-      //
     },
     onDragAdd(evt, subList) {
       console.log(evt, subList)

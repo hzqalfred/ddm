@@ -47,9 +47,11 @@ onMounted(async () => {
     });
   });
   let { data: mainData } = await getFunctionDetail(functionParam);
-  const designJson = parseEnhance(
-    mainData.designJson || '{"widgetList": [],"formConfig": {}}'
-  );
+  const designJson = ParentParam?.designJson
+    ? ParentParam.designJson
+    : parseEnhance(
+        mainData.designJson || '{"widgetList": [],"formConfig": {}}'
+      );
   const columnList = mainData.columnList || [];
   const methodList = mainData.methodList || [];
   const widgetList = designJson?.widgetList;

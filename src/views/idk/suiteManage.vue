@@ -365,6 +365,7 @@
       <function-generator
         :key="guideKey"
         :modData="guideData"
+        @generateData="reloadJson"
       ></function-generator>
     </vxe-modal>
   </div>
@@ -1338,6 +1339,28 @@ const checkImageValidity = () => {
   img.onerror = () => {
     imgList.value = [];
   };
+};
+const reloadJson = (json) => {
+  if (json) {
+    const param = Object.assign({}, guideData.value);
+    param.designJson = json;
+    homePage.create({
+      data: {
+        type: "window",
+        ele: "window",
+        code: "webdesigner",
+        id: "webdesigner" + guideData.value.functionId,
+        title: "界面设计-web设计器",
+        width: "100%",
+        height: "85%",
+        mask: false,
+        origin: true,
+        visible: true,
+        param,
+      },
+    });
+  }
+  showGuidePopup.value = false;
 };
 
 onMounted(() => {

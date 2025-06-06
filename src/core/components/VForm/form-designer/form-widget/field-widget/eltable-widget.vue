@@ -61,6 +61,7 @@
       <vxe-column
         v-if="field.options.selectabled"
         :type="field.options.isSelectType || 'radio'"
+        fixed="left"
         width="55"
       ></vxe-column>
 
@@ -69,6 +70,7 @@
         v-if="field.options.showIndex"
         type="seq"
         width="50"
+        fixed="left"
         row-resize
       />
 
@@ -82,8 +84,8 @@
           v-if="item.children && item.children.length > 0"
           :title="item.title"
           :width="item.width"
-          :align="item.align || 'center'"
-          :header-align="item.align || 'center'"
+          :align="item.align"
+          :header-align="item.align"
           :visible="item.visible !== false"
         >
           <!-- 二级分组 -->
@@ -107,21 +109,31 @@
                 :header-align="grandChild.align || 'center'"
                 :sortable="grandChild.sortable !== false"
                 :visible="grandChild.visible !== false"
-                :formatter="grandChild.formatter ? getFormatter(grandChild.formatter) : null"
-                :edit-render="grandChild.editable ? {
-                  name: grandChild.editRenderName || 'VxeInput',
-                  enabled: true,
-                  selectTableRowSet: grandChild.selectTableRowSet,
-                  ...grandChild.editRenderProps
-                } : null"
+                :formatter="
+                  grandChild.formatter
+                    ? getFormatter(grandChild.formatter)
+                    : null
+                "
+                :edit-render="
+                  grandChild.editable
+                    ? {
+                        name: grandChild.editRenderName || 'VxeInput',
+                        enabled: true,
+                        selectTableRowSet: grandChild.selectTableRowSet,
+                        ...grandChild.editRenderProps,
+                      }
+                    : null
+                "
               >
                 <!-- 自定义渲染 -->
                 <template v-if="grandChild.renderFn" #default="{ row }">
-                  <div v-html="evaluateRenderFn(grandChild.renderFn, row)"></div>
+                  <div
+                    v-html="evaluateRenderFn(grandChild.renderFn, row)"
+                  ></div>
                 </template>
               </vxe-column>
             </vxe-colgroup>
-            
+
             <!-- 二级普通列 -->
             <vxe-column
               v-else
@@ -132,13 +144,19 @@
               :header-align="child.align || 'center'"
               :sortable="child.sortable !== false"
               :visible="child.visible !== false"
-              :formatter="child.formatter ? getFormatter(child.formatter) : null"
-              :edit-render="child.editable ? {
-                name: child.editRenderName || 'VxeInput',
-                enabled: true,
-                selectTableRowSet: child.selectTableRowSet,
-                ...child.editRenderProps
-              } : null"
+              :formatter="
+                child.formatter ? getFormatter(child.formatter) : null
+              "
+              :edit-render="
+                child.editable
+                  ? {
+                      name: child.editRenderName || 'VxeInput',
+                      enabled: true,
+                      selectTableRowSet: child.selectTableRowSet,
+                      ...child.editRenderProps,
+                    }
+                  : null
+              "
             >
               <!-- 自定义渲染 -->
               <template v-if="child.renderFn" #default="{ row }">
@@ -150,31 +168,42 @@
 
         <!-- 普通列 -->
         <vxe-column
-          v-else-if="!item.type || !['checkbox', 'radio', 'seq', 'expand'].includes(item.type)"
+          v-else-if="
+            !item.type ||
+              !['checkbox', 'radio', 'seq', 'expand'].includes(item.type)
+          "
           :title="item.title"
           :field="item.field"
+          :fixed="item.fixed ? 'left' : '' "
           :width="item.width || 200"
-          :align="item.align || 'center'"
-          :header-align="item.align || 'center'"
+          :align="item.align"
+          :header-align="item.align"
           :sortable="item.sortable !== false"
           :visible="item.visible !== false"
           :formatter="item.formatter ? getFormatter(item.formatter) : null"
-          :edit-render="item.editable ? {
-            name: item.editRenderName || 'VxeInput',
-            enabled: true,
-            selectTableRowSet: item.selectTableRowSet,
-            ...item.editRenderProps
-          } : null"
+          :edit-render="
+            item.editable
+              ? {
+                  name: item.editRenderName || 'VxeInput',
+                  enabled: true,
+                  selectTableRowSet: item.selectTableRowSet,
+                  ...item.editRenderProps,
+                }
+              : null
+          "
         >
           <!-- 模板渲染 -->
-          <template v-if="item.renderByTemplate && item.editRenderName" #default="{ row }">
+          <template
+            v-if="item.renderByTemplate && item.editRenderName"
+            #default="{ row }"
+          >
             <component
               :is="item.editRenderName"
               v-model="row[item.field]"
               v-bind="item.editRenderProps"
             />
           </template>
-          
+
           <!-- 自定义渲染函数 -->
           <template v-else-if="item.renderFn" #default="{ row }">
             <div v-html="evaluateRenderFn(item.renderFn, row)"></div>
@@ -204,7 +233,7 @@
         </template>
       </vxe-column>
     </vxe-table>
-    
+
     <vxe-pager
       v-if="field.options.paginate !== false"
       v-model:currentPage="currentPage"
@@ -297,18 +326,18 @@ export default {
       }
       return events;
     },
-    
+
     pageSizes() {
       return this.field.options.pageUnit
         ? this.field.options.pageUnit.split(",").map((x) => Number(x))
         : [10, 20, 30, 50, 100];
     },
   },
-  
+
   created() {
     // 添加调试信息
     console.log("表格组件创建，列配置:", this.field.options.columns);
-    
+
     // 将权限相关方法挂载到 this 上
     this.getDataPrivilegeTree = getDataPrivilegeTree;
     this.getDataPrivilege = getDataPrivilege;
@@ -332,7 +361,7 @@ export default {
 
   mounted() {
     this.handleOnMounted();
-    
+
     if (this.field.options.autoLoad !== false && this.dataServiceId) {
       this.loadTableData();
     }
@@ -367,21 +396,24 @@ export default {
           if (!value) return "";
           const date = new Date(value);
           if (isNaN(date.getTime())) return value;
-          return date.toISOString().split('T')[0];
+          return date.toISOString().split("T")[0];
         },
         datetimeFormatter: (value) => {
           if (!value) return "";
           const date = new Date(value);
           if (isNaN(date.getTime())) return value;
-          return date.toLocaleString('zh-CN');
+          return date.toLocaleString("zh-CN");
         },
         currencyFormatter: (value, currency = "¥") => {
           if (value === null || value === undefined || value === "") return "";
           if (isNaN(Number(value))) return value;
-          return currency + Number(value).toLocaleString("zh-CN", {
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          });
+          return (
+            currency +
+            Number(value).toLocaleString("zh-CN", {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })
+          );
         },
         percentFormatter: (value) => {
           if (value === null || value === undefined || value === "") return "";
@@ -399,7 +431,6 @@ export default {
 
     // 点击单元格事件
     handleClickCell({ $table }) {
-      
       const currentRow = $table.getCurrentRecord();
       if (this.field.options.isSelectType == "radio") {
         $table.setRadioRow(currentRow);
@@ -448,9 +479,11 @@ export default {
     handleSelectionChange(event, selection) {
       console.log("选择行变化:", selection);
       this.dataCenter.postEvent("table-selection-change", selection);
-      
+
       try {
-        let events = this.formConfig.eventMap[`${this.field.id}.onSelectionChange`];
+        let events = this.formConfig.eventMap[
+          `${this.field.id}.onSelectionChange`
+        ];
         let obj = this.formConfig?.globalObject;
         if (obj && obj[events]) {
           let selectionFn = obj[events];
@@ -465,33 +498,51 @@ export default {
     initDataCenterSubscriptions() {
       if (!this.dataCenter) return;
 
-      this.unsubscribeQueries = this.dataCenter.subscribe("table-query-params", (params) => {
-        console.log("表格组件收到查询参数:", params);
-        this.queryParams = params || {};
-        this.currentPage = 1;
-        this.loadTableData();
-      });
+      this.unsubscribeQueries = this.dataCenter.subscribe(
+        "table-query-params",
+        (params) => {
+          console.log("表格组件收到查询参数:", params);
+          this.queryParams = params || {};
+          this.currentPage = 1;
+          this.loadTableData();
+        }
+      );
 
-      this.unsubscribePagination = this.dataCenter.subscribe("table-pagination-change", (pagination) => {
-        if (pagination.currentPage) this.currentPage = pagination.currentPage;
-        if (pagination.pageSize) this.pageSize = pagination.pageSize;
-        this.loadTableData();
-      });
+      this.unsubscribePagination = this.dataCenter.subscribe(
+        "table-pagination-change",
+        (pagination) => {
+          if (pagination.currentPage) this.currentPage = pagination.currentPage;
+          if (pagination.pageSize) this.pageSize = pagination.pageSize;
+          this.loadTableData();
+        }
+      );
 
-      this.unsubscribeRefresh = this.dataCenter.subscribe("refresh-table", () => {
-        this.loadTableData();
-      });
+      this.unsubscribeRefresh = this.dataCenter.subscribe(
+        "refresh-table",
+        () => {
+          this.loadTableData();
+        }
+      );
     },
 
     // 取消DataCenter订阅
     unsubscribeDataCenterEvents() {
-      if (this.unsubscribeQueries && typeof this.unsubscribeQueries === "function") {
+      if (
+        this.unsubscribeQueries &&
+        typeof this.unsubscribeQueries === "function"
+      ) {
         this.unsubscribeQueries();
       }
-      if (this.unsubscribePagination && typeof this.unsubscribePagination === "function") {
+      if (
+        this.unsubscribePagination &&
+        typeof this.unsubscribePagination === "function"
+      ) {
         this.unsubscribePagination();
       }
-      if (this.unsubscribeRefresh && typeof this.unsubscribeRefresh === "function") {
+      if (
+        this.unsubscribeRefresh &&
+        typeof this.unsubscribeRefresh === "function"
+      ) {
         this.unsubscribeRefresh();
       }
     },
@@ -515,7 +566,9 @@ export default {
         pageSize: this.pageSize,
       };
 
-      let url = this.formConfig.serviceMap[this.field.serviceMapId] || this.queryMethodInfo;
+      let url =
+        this.formConfig.serviceMap[this.field.serviceMapId] ||
+        this.queryMethodInfo;
       if (!url) return;
 
       if (globalParams.env === "preview") {
@@ -524,10 +577,11 @@ export default {
         url = `/event/exec/${url}`;
       }
 
-      this.request.postData(url, requestParams)
+      this.request
+        .postData(url, requestParams)
         .then((res) => {
           console.log("表格数据查询结果:", res);
-          
+
           if (res && (res.code === 0 || res.success)) {
             if (res.data) {
               if (res.data.rows && Array.isArray(res.data.rows)) {
@@ -575,7 +629,7 @@ export default {
     handlePageChange({ type, currentPage, pageSize }) {
       console.log("分页变化:", type, currentPage, pageSize);
       if (this.designState) return;
-      
+
       this.currentPage = currentPage;
       this.pageSize = pageSize;
 
@@ -588,7 +642,10 @@ export default {
       this.loadTableData();
 
       try {
-        let event = (this.formConfig.eventMap && this.formConfig.eventMap[`${this.field.id}.onPageChange`]) || "";
+        let event =
+          (this.formConfig.eventMap &&
+            this.formConfig.eventMap[`${this.field.id}.onPageChange`]) ||
+          "";
         let obj = this.formConfig?.globalObject;
         if (obj && event && obj[event]) {
           let changeFn = obj[event];
@@ -629,16 +686,19 @@ export default {
           if (typeof this.field.options.events[eventName] === "function") {
             return this.field.options.events[eventName].apply(this, args);
           } else if (typeof this.field.options.events[eventName] === "string") {
-            const fn = new Function("return " + this.field.options.events[eventName])();
+            const fn = new Function(
+              "return " + this.field.options.events[eventName]
+            )();
             return fn.apply(this, args);
           }
         } catch (error) {
           console.error(`执行事件处理函数 ${eventName} 失败:`, error);
         }
       }
-      
+
       const defaultHandler = this[
-        `default${eventName.charAt(0).toUpperCase() + eventName.slice(1).replace(/-([a-z])/g, (g) => g[1].toUpperCase())}`
+        `default${eventName.charAt(0).toUpperCase() +
+          eventName.slice(1).replace(/-([a-z])/g, (g) => g[1].toUpperCase())}`
       ];
       if (typeof defaultHandler === "function") {
         return defaultHandler.apply(this, args);

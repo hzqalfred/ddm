@@ -55,7 +55,7 @@
       </vxe-form>
     </div>
     <div style="margin-top: 20px;">
-      <vxe-tip status="primary">事件明细</vxe-tip>
+      <vxe-tip status="primary">功能配置</vxe-tip>
       <div style="margin: 10px 0;">
         <vxe-button
           size="mini"
@@ -255,17 +255,7 @@
         <vxe-column
           :visible="isQueryColumn"
           field="gridColumn"
-          title="表格显示"
-          width="100"
-        >
-          <template #default="{ row }">
-            <vxe-switch size="mini" v-model="row.gridColumn" />
-          </template>
-        </vxe-column>
-        <vxe-column
-          :visible="isQueryColumn"
-          field="formColumn"
-          title="表单显示"
+          title="显示"
           width="100"
         >
           <template #default="{ row }">
@@ -530,7 +520,7 @@
       <vxe-button
         type="submit"
         status="primary"
-        content="完成生成"
+        content="功能生成"
         @click="generateComplete"
       />
     </div>
@@ -888,7 +878,6 @@ export default {
   data() {
     return {
       // 基础数据
-      funData: {},
       formData: {
         moduleName: "",
         moduleCode: "",
@@ -943,9 +932,24 @@ export default {
         };
       });
     },
+    autoQueryList() {
+      return this.columnList
+        .map((column) => ({
+          searchColumn: column.columnCode,
+          requestColumn: column.columnCode,
+          label: column.columnName,
+          columnName: column.columnName,
+          query: !!column.queryColumn , // 默认不启用查询
+          allowquery: !!column.queryColumn, // 允许查询
+          operator: "eq", // 默认等于操作符
+          defaultValue: column.defaultValue || "",
+          type: this.getInputTypeByColumnType(column.columnType), // 根据字段类型设置输入类型
+          options: null,
+        }));
+    },
     isTreeType() {
       return ["tree-grid", "tree-grid-form"].includes(
-        this.funData.functionType
+        this.formData.functionType
       );
     },
     editTitle() {
@@ -953,36 +957,23 @@ export default {
       return `${this.editRow ? "编辑" : "新增"}${titles[this.editType] || ""}`;
     },
     isSaveColumn() {
-      console.log(
-        this.methodList.find((x) => x.methodName?.indexOf("保存") > -1)
-      );
       return !!this.methodList.find((x) => x.methodName?.indexOf("保存") > -1);
     },
     isQueryColumn() {
-      // console.log(
-      //   this.methodList.find((x) => x.methodName?.indexOf("查询") > -1)
-      // );
       return !!this.methodList.find((x) => x.methodName?.indexOf("查询") > -1);
+    },
+    isGrid() {
+      return this.formData.functionType.indexOf("grid") > -1;
+    },
+    isForm() {
+      return this.formData.functionType.indexOf("form") > -1;
     },
   },
   watch: {
     modData: {
       handler(newValue) {
         if (newValue) {
-          console.log(newValue);
-          Object.assign(this.funData, newValue);
-          Object.assign(this.formData, {
-            moduleName: newValue.moduleName,
-            moduleCode: newValue.moduleCode,
-            functionCode: newValue.functionCode,
-            functionName: newValue.functionName,
-            functionId: newValue.functionId,
-            menuFunction: newValue.menuFunction,
-            orderIndex: newValue.orderIndex,
-            functionType: newValue.functionType,
-            formColumnNums: newValue.formColumnNums,
-            tree: newValue.tree,
-          });
+          Object.assign(this.formData, newValue);
         }
       },
       immediate: true,
@@ -996,8 +987,36 @@ export default {
     this.initSortable();
   },
   methods: {
+    getInputTypeByColumnType(columnType) {
+      const typeMap = {
+        String: "input",
+        Text: "textarea",
+        Integer: "number",
+        Long: "number",
+        Double: "number",
+        Decimal: "number",
+        Boolean: "select",
+        Date: "date",
+        DateTime: "datetime",
+      };
+      return typeMap[columnType] || "input";
+    },
     saveInfo() {
-      saveBaseInfo(this.formData).then((res) => {
+      const formFields = {
+        functionId: this.formData.functionId,
+        functionName: this.formData.functionName,
+        functionCode: this.formData.functionCode,
+        functionType: this.formData.functionType,
+        menuFunction: this.formData.menuFunction,
+        tree: this.formData.tree,
+        orderIndex: this.formData.orderIndex,
+        formColumnNums: this.formData.formColumnNums,
+        modelSql: this.formData.modelSql, // 数据对象绑定字段
+        // 保留必要的基础字段
+        moduleName: this.formData.moduleName,
+        moduleCode: this.formData.moduleCode,
+      };
+      saveBaseInfo(formFields).then((res) => {
         messageHandler.notifyMsg(res.msg, res.success);
       });
     },
@@ -1125,7 +1144,7 @@ export default {
         methodAttribute: "",
         methodDescription: "",
         orderIndex: "",
-        methodIds:""
+        methodIds: "",
       };
       this.methodList.push(newRow);
     },
@@ -1225,7 +1244,7 @@ export default {
 
     // 数据加载
     async loadData() {
-      if (!this.funData.functionCode) return;
+      if (!this.formData.functionCode) return;
 
       try {
         const res = await getFunctionDetail(this.getBaseParams());
@@ -1385,7 +1404,7 @@ export default {
       switch (type) {
         case "method":
           if (row.methodCode) {
-            param.methodCodes = [row.methodIds];
+            param.methodIds = [row.methodId];
             return await deleteMethod(param);
           }
           break;
@@ -1447,8 +1466,8 @@ export default {
         const res = await allDataService();
         const module = res.data.find(
           (x) =>
-            x.moduleCode === this.funData.moduleCode &&
-            x.moduleName === this.funData.moduleName
+            x.moduleCode === this.formData.moduleCode &&
+            x.moduleName === this.formData.moduleName
         );
 
         if (module?.dataObjectList) {
@@ -1477,7 +1496,7 @@ export default {
       }
     },
 
-    // 完成生成
+    // 功能生成
     async generateComplete() {
       if (!this.sqlParsed) {
         this.showMessage("请先解析SQL", "warning");
@@ -1491,17 +1510,25 @@ export default {
 
         if (confirm === "confirm") {
           const res = await getFunctionDetail(this.getBaseParams());
+          
           if (res.code === "200") {
             const formJson = {
+              baseInfo: {
+                formColumnNums: res.data.formColumnNums || 2,
+                moduleCode: res.data.moduleCode || "",
+                moduleName: res.data.moduleName || "",
+                functionCode: res.data.functionCode || "",
+                functionName: res.data.functionName || "",
+              },
               columnList: res.data.columnList || [],
               methodList: res.data.methodList || [],
-              queryList: this.queryList,
-              treeList: res.data.treeList || [],
+              queryList: this.autoQueryList,
+              // treeList: res.data.treeList || [],
               widgetList: [],
               formConfig: {
-                moduleId: `${this.funData.moduleCode}_${this.funData.functionCode}`,
+                moduleId: `${this.formData.moduleCode}_${this.formData.functionCode}`,
               },
-              module: this.funData,
+              module: this.formData,
             };
             const { widgetList, formConfig } = generateJson(
               formJson,

@@ -337,7 +337,6 @@ export const basicFields = [
       onAppendButtonClick: "",
     },
     attrs: [
-      { name: "width", title: "长度", type: "number", remark: "长度2" },
       {
         name: "defaultValue",
         title: "默认值",

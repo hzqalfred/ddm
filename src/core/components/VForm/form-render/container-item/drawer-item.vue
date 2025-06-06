@@ -134,18 +134,22 @@ export default {
     handleHide() {
       this.dialogVisible = false;
     },
-
     handleOnShow() {
       let obj = this.formConfig?.globalObject;
       if (obj && obj[`${this.$props?.widget?.id}.onShow`]) {
         try {
           let changeFn = obj[`${this.$props?.widget?.id}.onShow`];
+          if (typeof changeFn == "string") {
+            const func = new Function("return " + changeFn)();
+            func.call(this);
+          } else {
+            changeFn.call(this);
+          }
           // const argsMatch = changeFn.match(/^function\s*\((.*?)\)/);
           // const args = argsMatch ? argsMatch[1].split(',').map(arg => arg.trim()) : [];
           // const body = changeFn.slice(changeFn.indexOf('{') + 1, -1).trim();
           // const func = new Function(...args, body);
           // 上面注释的可以在预览中使用，但是在设计器中会报错，所以这里使用下面的方法👆👇
-          changeFn(this);
         } catch (e) {
           console.error("执行选择行自定义事件出错:", e);
         }

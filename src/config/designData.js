@@ -1,13 +1,17 @@
 import { processObject } from "@/core/utils/tool";
-
-let module = "";
-
+import {
+  basicFields,
+  containers,
+} from "@/core/components/VForm/form-designer/widget-panel/widgetsConfig";
+import _ from "lodash";
 let globalObject = {};
 let eventMap = {};
 
 const generateRandomId = () => Math.floor(Math.random() * 100000 + 1);
-const generateDivider = (id, title) => {
-  return {
+//分割线
+const generateDivider = ({ id, title }) => {
+  let divider = basicFields.find((x) => x.type == "divider");
+  return _.merge({}, divider, {
     key: id,
     type: "divider",
     icon: "divider",
@@ -28,8 +32,50 @@ const generateDivider = (id, title) => {
       label: "divider",
     },
     id: "divider" + id,
-  };
+  });
 };
+
+const generateDrawer = ({ name, label = "drawer", widgetList = [] }) => {
+  let id = generateRandomId();
+  let drawer = containers.find((x) => x.type == "drawer");
+  eventMap[`${"drawer" + id}.onShow`] = `${"drawer" + id}.onShow`;
+  Object.assign(
+    globalObject,
+    processObject({
+      [`${"drawer" + id}.onShow`]: `function() {
+var row = this.selRow;
+      this.comUtils.setFormData(row, this.refList, false)
+  }`,
+    })
+  );
+  return _.merge({}, drawer, {
+    key: name || "drawer" + id,
+    widgetList,
+    options: {
+      name: name || "drawer" + id,
+      title: label,
+      position: "right",
+      width: "80%",
+      height: "40%",
+    },
+    id: name || "drawer" + id,
+  });
+};
+
+const generateInput = ({ name, label }) => {
+  let id = generateRandomId();
+  let input = basicFields.find((x) => x.type == "input");
+
+  return _.merge({}, input, {
+    key: name || "input" + id,
+    options: {
+      name: name || "input" + id,
+      label,
+    },
+    id: name || "input" + id,
+  });
+};
+
 const generateQuery = (id, belongTo, items = []) => {
   return {
     key: id,
@@ -81,7 +127,7 @@ function generateGridColumn(id, widgetList = [], span = 1) {
   };
 }
 
-function generateButton(methodCode, label, belongTo) {
+function generateButton({ methodCode, label, belongTo, status = "primary" }) {
   return {
     key: methodCode,
     type: "button",
@@ -95,7 +141,7 @@ function generateButton(methodCode, label, belongTo) {
       mode: "button",
       float: "flex-start",
       comsize: "",
-      status: "primary",
+      status,
       round: false,
       circle: false,
       icon: "",
@@ -114,7 +160,7 @@ function generateButton(methodCode, label, belongTo) {
   };
 }
 
-function generateGridContainer(cols, name) {
+function generateGridContainer(cols, name = "grid") {
   return {
     key: Math.floor(Math.random() * 100000 + 1),
     type: "grid",
@@ -132,7 +178,7 @@ function generateGridContainer(cols, name) {
   };
 }
 
-function generateButtonContainer(methodList, belongTo) {
+function generateButtonContainer({ methodList, belongTo, type, drawer }) {
   let methods = methodList.map((x) => ({
     methodCode: x.methodCode.replace(".", "_"),
     methodName: x.methodName,
@@ -153,34 +199,65 @@ function generateButtonContainer(methodList, belongTo) {
       method.methodCode.toLowerCase().includes("delete") ||
       method.methodName === "删除"
   );
-  let addMethod = {
-    methodCode: "add",
-    methodName: "新增",
-  };
+  let addMethod =
+    type == "grid"
+      ? {
+          methodCode: "add",
+          methodName: "新增",
+        }
+      : null;
+  let drawerMethod = drawer
+    ? {
+        methodCode: "drawer",
+        methodName: "表单",
+      }
+    : null;
+
   let combinedMethods = [
     queryMethod,
     saveMethod,
     deleteMethod,
     addMethod,
+    drawerMethod,
   ].filter(Boolean);
-  combinedMethods.map((method) => {
+  let buttons = combinedMethods.map((method) => {
     eventMap[`${method.methodCode}.onClick`] = `${method.methodCode}.onClick`;
-    if (method.methodCode.toLowerCase().includes("query")) {
-      eventMap[`${belongTo}.onMounted`] = `${method.methodCode}.onClick`;
-      eventMap[`${belongTo}.onPageChange`] = `${method.methodCode}.onClick`;
+
+    if (method?.methodName?.includes("表单")) {
+      method.status = "success";
       Object.assign(
         globalObject,
         processObject({
           [`${method.methodCode}.onClick`]: `function() {
-    this.comUtils.loadGridData("${belongTo}");
+    const data = this.refList['${belongTo || ""}'].$refs['${belongTo ||
+            ""}'].getCheckboxRecords()
+    if(data.length!=1) return
+    this.refList.${drawer}.selRow = data[0]
+    this.refList.${drawer}.$refs.fieldEditor.open()
   }`,
         })
       );
-    } else if (method.methodCode.toLowerCase().includes("save")) {
-      Object.assign(
-        globalObject,
-        processObject({
-          [`${method.methodCode}.onClick`]: `function() {
+    }
+
+    if (type == "grid") {
+      if (method?.methodName?.includes("查询")) {
+        method.status = "info";
+        eventMap[`${belongTo}.onMounted`] = `${method.methodCode}.onClick`;
+        eventMap[`${belongTo}.onPageChange`] = `${method.methodCode}.onClick`;
+        Object.assign(
+          globalObject,
+          processObject({
+            [`${method.methodCode}.onClick`]: `function() {
+    this.comUtils.loadGridData("${belongTo}");
+  }`,
+          })
+        );
+      } else if (method?.methodName?.includes("保存")) {
+        method.status = "warning";
+        Object.assign(
+          globalObject,
+          processObject({
+            [`${method.methodCode}.onClick`]: `function() {
      const tableList = this.refList["${belongTo}"];
     const { $refs } = tableList;
     const $table = $refs["${belongTo}"];
@@ -198,33 +275,66 @@ function generateButtonContainer(methodList, belongTo) {
     }
     this.comUtils.saveGridData("${belongTo}");
   }`,
-        })
-      );
-    } else if (method.methodCode.toLowerCase().includes("delete")) {
-      Object.assign(
-        globalObject,
-        processObject({
-          [`${method.methodCode}.onClick`]: `function() {
+          })
+        );
+      } else if (method?.methodName?.includes("删除")) {
+        method.status = "error";
+        Object.assign(
+          globalObject,
+          processObject({
+            [`${method.methodCode}.onClick`]: `function() {
     this.comUtils.deleteGridData("${belongTo}");
   }`,
-        })
-      );
-    } else if (method.methodCode.toLowerCase().includes("add")) {
-      Object.assign(
-        globalObject,
-        processObject({
-          [`${method.methodCode}.onClick`]: `function() {
+          })
+        );
+      } else if (method?.methodName?.includes("新增")) {
+        Object.assign(
+          globalObject,
+          processObject({
+            [`${method.methodCode}.onClick`]: `function() {
     this.comUtils.addGridData("${belongTo}");
   }`,
-        })
-      );
+          })
+        );
+      }
+    } else if (type == "form") {
+      if (method?.methodName?.includes("查询")) {
+        method.status = "info";
+        eventMap[`form.onLoad`] = `${method.methodCode}.onClick`;
+        Object.assign(
+          globalObject,
+          processObject({
+            [`${method.methodCode}.onClick`]: `function() {
+    this.comUtils.loadFormData('${belongTo}');
+  }`,
+          })
+        );
+      } else if (method?.methodName?.includes("保存")) {
+        method.status = "warning";
+        Object.assign(
+          globalObject,
+          processObject({
+            [`${method.methodCode}.onClick`]: `function() {
+    this.comUtils.saveFormData('${belongTo}');
+  }`,
+          })
+        );
+      }
     }
+    return method;
   });
 
-  const cols = combinedMethods.map((method) => {
+  const cols = buttons.map((method) => {
     return generateGridColumn(
       generateRandomId(),
-      [generateButton(method.methodCode, method.methodName, belongTo)],
+      [
+        generateButton({
+          methodCode: method.methodCode,
+          label: method.methodName,
+          belongTo,
+          status: method.status,
+        }),
+      ],
       method.methodName?.length * 0.6 || 2 * 0.6
     );
   });
@@ -270,23 +380,24 @@ function getEditRender(column) {
 }
 
 function generateTableColumns(columnList) {
-  return (
-    columnList
-      // .filter((x) => !!x.gridColumn)
-      .map((column) => {
-        // 基础列配置
-        const columnConfig = {
-          field: column.columnCode,
-          title: column.columnName,
-          width: column.width || 200, // 默认宽度为200px
-          editable: !!column.modifyEdit,
-          visible: !!column.gridColumn,
-          editRenderName: getEditRender(column), // 添加编辑渲染器
-        };
+  
+  return columnList
+    .filter((x) => !!x.gridColumn)
+    .map((column) => {
+      // 基础列配置
+      const columnConfig = {
+        fixed: column.fixedColumn,
+        field: column.columnCode,
+        title: column.columnName,
+        width: column.width || 200, // 默认宽度为200px
+        editable: !!column.modifyEdit,
+        visible: !!column.gridColumn,
+        align: column.align,
+        editRenderName:column.componentName || getEditRender(column), // 添加编辑渲染器
+      };
 
-        return columnConfig;
-      })
-  );
+      return columnConfig;
+    });
 }
 
 function generateTable(columnList, belongTo) {
@@ -353,132 +464,19 @@ function generateTable(columnList, belongTo) {
   };
 }
 
-function generateFieldAttributes() {
-  return [
-    {
-      name: "disabled",
-      title: "禁用",
-      type: "check",
-      remark: "禁用",
-    },
-    {
-      name: "hidden",
-      title: "隐藏",
-      type: "check",
-      remark: "隐藏",
-    },
-  ];
-}
-
-function generateInputField(column) {
-  // 特殊字段处理逻辑
-  let fieldType = "text";
-  let fieldOptions = {};
-
-  // 根据字段名判断类型
-  if (
-    column.columnCode.includes("date") ||
-    column.columnCode.includes("time")
-  ) {
-    fieldType = "datetime";
-    fieldOptions = {
-      format: "yyyy-MM-dd HH:mm:ss",
-    };
-  } else if (column.columnType === "number" || column.decimalLength > 0) {
-    fieldType = "number";
-  }
-
-  return {
-    key: column.columnCode,
-    type: "input",
-    icon: "text-field",
-    formItemFlag: true,
-    options: {
-      name: column.columnCode,
-      label: column.columnName,
-      type: fieldType,
-      placeholder: `请输入${column.columnName}`,
-      size: "",
-      labelWidth: null,
-      labelHidden: false,
-      readonly: false,
-      disabled: false,
-      hidden: false,
-      clearable: true,
-      showPassword: false,
-      required: column.required || false,
-      labelTooltip: null,
-      minLength: null,
-      maxLength: column.maxLength || null,
-      showWordLimit: column.maxLength > 0,
-      buttonIcon: "custom-search",
-      onCreated: "",
-      onMounted: "",
-      onInput: "",
-      onChange: "",
-      onFocus: "",
-      onBlur: "",
-      onValidate: "",
-      onAppendButtonClick: "",
-      ...fieldOptions,
-      cpType: fieldType,
-    },
-    attrs: [
-      ...generateFieldAttributes(),
-      {
-        name: "cpType",
-        show: false,
-      },
-    ],
-    events: generateFieldEvents(),
-    selected: false,
-    id: column.columnCode,
-  };
-}
-
-function generateDialog(columnList) {
-  // 选择列定义中的所有列用于表单
-  const dialogColumns = columnList;
-  const cols = dialogColumns.map((column) => {
-    const randomId = Math.floor(Math.random() * 100000 + 1);
-    return generateGridColumn(randomId, [generateInputField(column)], 8);
-  });
-  return {
-    key: Math.floor(Math.random() * 100000 + 1),
-    type: "dialog",
-    category: "container",
-    icon: "dialog",
-    widgetList: [generateGridContainer(cols, "dialogGrid")],
-    options: {
-      name: `dataDialog`, // 使用固定的名称，便于在按钮事件中引用
-      label: "数据操作",
-      dialogWidth: "80%",
-      fullScreen: false,
-      showClose: true,
-      showModal: true,
-      closeOnClickModal: false,
-      closeOnPressEscape: false,
-      center: false,
-      comfirmButtonText: "确定",
-      hideComfirm: false,
-      cancelButtonText: "取消",
-      hideCancel: false,
-      hidden: false,
-      customClass: "",
-    },
-    id: `dataDialog`,
-  };
-}
-
-function generateTree(treeList, belongTo = "userTable") {
+function generateTree(functionCode, belongTo = "defaultTable") {
   let id = generateRandomId();
-  let data = treeList[0];
   eventMap[`${"tree" + id}.onMounted`] = `${"tree" + id}.onMounted`;
+  eventMap[`${"tree" + id}.onNodeClick`] = `${"tree" + id}.onNodeClick`;
   Object.assign(
     globalObject,
     processObject({
       [`${"tree" + id}.onMounted`]: `function() {
-   this.comUtils.loadTreeData("${data.objectCode}","${"tree" + id}")
+   this.comUtils.loadTreeData("${functionCode}","${"tree" + id}")
+  }`,
+      [`${"tree" + id}.onNodeClick`]: `function(node) {
+   const treeNode = { id: node.dept_id, path: node.dept_path }
+    this.comUtils.loadGridData("${belongTo}", {},treeNode);
   }`,
     })
   );
@@ -534,27 +532,27 @@ export function generateGridData(inputData) {
     return {};
   }
 
-  const { columnList, methodList, formConfig, queryList } = inputData;
+  const { baseInfo, columnList, methodList, formConfig, queryList } = inputData;
 
-  const belong = "defaultTable";
+  const belongTo = "defaultTable";
 
   const widgetList = [
-    generateDivider(generateRandomId()),
+    generateDivider({ id: generateRandomId(), title: baseInfo.functionName }),
     generateGridContainer(
       [
         generateGridColumn(
           generateRandomId(),
-          [generateButtonContainer(methodList, belong)],
+          [generateButtonContainer({ methodList, belongTo, type: "grid" })],
           16
         ),
         generateGridColumn(
           generateRandomId(),
-          [generateQuery(generateRandomId(), belong, queryList)],
+          [generateQuery(generateRandomId(), belongTo, queryList)],
           8
         ),
         generateGridColumn(
           generateRandomId(),
-          [generateTable(columnList, belong)],
+          [generateTable(columnList, belongTo)],
           24
         ),
       ],
@@ -571,39 +569,78 @@ export function generateGridData(inputData) {
   };
 }
 
-export function generateFormData(inputData) {}
+export function generateFormData(inputData) {
+  if (!inputData) {
+    return {};
+  }
+  const belongTo = "defaultForm";
+  const { baseInfo, columnList, methodList, formConfig, queryList } = inputData;
+
+  let arr = columnList
+    .filter((x) => x.gridColumn)
+    .map((x) => {
+      return generateGridColumn(
+        generateRandomId(),
+        [generateInput({ label: x.columnName, name: x.columnCode })],
+        24 / baseInfo.formColumnNums
+      );
+    });
+  const widgetList = [
+    generateDivider({ id: generateRandomId(), title: baseInfo.functionName }),
+    generateButtonContainer({ methodList, belongTo, type: "form" }),
+    generateGridContainer(arr, belongTo),
+  ];
+  return {
+    widgetList: widgetList,
+    formConfig: Object.assign({}, formConfig, {
+      globalObject, // 添加全局函数到 formConfig
+      eventMap,
+    }),
+  };
+}
 
 export function generateTreeGridData(inputData) {
   if (!inputData) {
     return {};
   }
 
-  const { columnList, methodList, formConfig, queryList, treeList } = inputData;
+  const { baseInfo, columnList, methodList, formConfig, queryList } = inputData;
 
-  const belong = "defaultTable";
+  const belongTo = "defaultTable";
+  let tree = methodList.find((x) => x.methodName == "树形");
 
   const widgetList = [
-    generateDivider(generateRandomId()),
+    generateDivider({ id: generateRandomId(), title: baseInfo.functionName }),
     generateGridContainer(
       [
-        generateGridColumn(generateRandomId(), [generateTree(treeList)], 3),
+        generateGridColumn(
+          generateRandomId(),
+          [generateTree(tree?.methodCode?.replace(".tree", ""), belongTo)],
+          3
+        ),
         generateGridColumn(
           generateRandomId(),
           [
             generateGridContainer([
               generateGridColumn(
                 generateRandomId(),
-                [generateButtonContainer(methodList, belong)],
+                [
+                  generateButtonContainer({
+                    methodList,
+                    belongTo,
+                    type: "grid",
+                  }),
+                ],
                 16
               ),
               generateGridColumn(
                 generateRandomId(),
-                [generateQuery(generateRandomId(), belong, queryList)],
+                [generateQuery(generateRandomId(), belongTo, queryList)],
                 8
               ),
               generateGridColumn(
                 generateRandomId(),
-                [generateTable(columnList, belong)],
+                [generateTable(columnList, belongTo)],
                 24
               ),
             ]),
@@ -614,7 +651,6 @@ export function generateTreeGridData(inputData) {
       "grid"
     ),
   ];
-  console.log(columnList);
   return {
     widgetList: widgetList,
     formConfig: Object.assign({}, formConfig, {
@@ -624,9 +660,84 @@ export function generateTreeGridData(inputData) {
   };
 }
 
-export function generateTreeGridFormData(inputData) {}
+export function generateTreeGridFormData(inputData) {
+  if (!inputData) {
+    return {};
+  }
+
+  const { baseInfo, columnList, methodList, formConfig, queryList } = inputData;
+
+  const belongTo = "defaultTable";
+  let tree = methodList.find((x) => x.methodName == "树形");
+  let arr = columnList
+    .filter((x) => x.gridColumn)
+    .map((x) => {
+      return generateGridColumn(
+        generateRandomId(),
+        [generateInput({ label: x.columnName, name: x.columnCode })],
+        24 / baseInfo.formColumnNums
+      );
+    });
+  let drawer = generateDrawer({
+    widgetList: [generateGridContainer(arr)],
+  });
+  const widgetList = [
+    generateDivider({ id: generateRandomId(), title: baseInfo.functionName }),
+    generateGridContainer(
+      [
+        generateGridColumn(
+          generateRandomId(),
+          [generateTree(tree?.methodCode?.replace(".tree", ""), belongTo)],
+          3
+        ),
+        generateGridColumn(
+          generateRandomId(),
+          [
+            generateGridContainer([
+              generateGridColumn(
+                generateRandomId(),
+                [
+                  generateButtonContainer({
+                    methodList,
+                    belongTo,
+                    type: "grid",
+                    drawer: drawer.id,
+                  }),
+                ],
+                16
+              ),
+              generateGridColumn(
+                generateRandomId(),
+                [generateQuery(generateRandomId(), belongTo, queryList)],
+                8
+              ),
+              generateGridColumn(
+                generateRandomId(),
+                [generateTable(columnList, belongTo)],
+                24
+              ),
+            ]),
+          ],
+          21
+        ),
+      ],
+      "grid"
+    ),
+    drawer,
+  ];
+
+  return {
+    widgetList: widgetList,
+    formConfig: Object.assign({}, formConfig, {
+      globalObject, // 添加全局函数到 formConfig
+      eventMap,
+    }),
+  };
+}
 
 export default function main(inputData, type = "grid") {
+  globalObject = {};
+  eventMap = {};
   if (type === "form") return generateFormData(inputData);
   if (type === "grid") return generateGridData(inputData);
   if (type === "tree-grid") return generateTreeGridData(inputData);

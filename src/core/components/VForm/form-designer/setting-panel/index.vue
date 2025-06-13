@@ -736,8 +736,9 @@ export default {
         return;
       }
       let data = Object.assign({}, this.globalDsv.param, {
-        modelSql: "select * from " + this.modelCode,
+        modelCode: this.modelCode,
       });
+      if(data.modelSql) delete data.modelSql
       console.log(data);
       parseModelSql(data).then((res) => {
         if (res.code !== "200") {

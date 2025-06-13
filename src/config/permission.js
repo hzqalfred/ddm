@@ -4,16 +4,17 @@ import auth from "@/core/AuthManage";
 import { getIntiInfo } from "@/api/init";
 
 // 白名单，里面是路由对象的name
-const WhiteList = ["login","directFunction"];
+const WhiteList = ["login", "directFunction"];
 
 let loadingInstance = null;
 
 // vue-router4的路由守卫不再是通过next放行，而是通过return返回true或false或者一个路由地址
 router.beforeEach(async (to, from) => {
   let { data: initData } = await getIntiInfo(); //每一次跳转链接 都到后台请求状态
-  if(!to.name) return initData.flag
+  if (!to.name) return initData.flag;
   auth.setEnabled(initData.authenticationEnabled); // 记录当前是否启用权限套件
-
+  if (initData.flag == "init" && to.name == "init") return true;
+  if (initData.flag == "init") return "/init";
   if (!initData.authenticationEnabled) return true; //权限套件未激活,则所有路径都可进入
 
   if (WhiteList.includes(to.name)) {

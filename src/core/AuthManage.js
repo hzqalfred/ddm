@@ -23,7 +23,7 @@ export function createAuthManage() {
   const setInfo = (info) => {
     userInfo = info;
     // 保存到本地存储
-    localStorage.setItem("userInfo", info);
+    localStorage.setItem("userInfo",JSON.stringify(info) );
   };
 
   const getInfo = () => userInfo;

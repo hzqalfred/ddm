@@ -1765,7 +1765,6 @@ export const advancedFields = [
       //-------------------
       onCreated: "",
       onMounted: "",
-      onBeforeUpload: "",
       onUploadSuccess: "",
       onUploadError: "",
       onFileRemove: "",

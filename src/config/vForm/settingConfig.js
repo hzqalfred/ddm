@@ -32,6 +32,26 @@ const setting = [
       },
     ],
   },
+   {
+    type: "input",
+    options: {
+   
+    },
+    attrs: [
+      {
+        name: "requiredMessage",
+        title: "必填信息",
+        type: "droplist",
+        remark: "必填信息",
+        options: [
+          {
+            value: "请输入1",
+            label: "请输入2",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export default setting;

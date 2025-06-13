@@ -1,33 +1,106 @@
 <template>
-  <div class="avatar-group">
-    <vxe-menu
-      ref="MenuRef"
-      v-model="selectNav"
-      :options="navList"
-      @click="handleMenuClick"
-    >
-      <template #option="{ option }">
-        <div>
-          <svg-icon size="16px" :iconClass="option.icon"></svg-icon>
-          <span style="margin-left: 2px;">{{ option.title }}</span>
+  <div class="split-menu-container">
+    <!-- 左侧一级菜单 -->
+    <div class="primary-menu">
+      <div
+        v-for="item in menuItems"
+        :key="item.name"
+        class="primary-menu-item"
+        :class="{
+          'is-active': activeMenuId === item.name || isParentActive(item),
+        }"
+        @click="handlePrimaryMenuClick(item)"
+      >
+        <div v-if="item.icon" class="menu-icon">
+          <svg-icon size="20px" :iconClass="item.icon || 'menu'" />
         </div>
-      </template>
-    </vxe-menu>
+        <div class="menu-title">{{ item.title }}</div>
+      </div>
+    </div>
+
+    <!-- 右侧子菜单 -->
+    <div
+      class="secondary-menu"
+      v-if="activeMainMenu && hasChildren(activeMainMenu)"
+    >
+      <div class="secondary-menu-content">
+        <template v-for="child in activeMainMenu.children" :key="child.name">
+          <!-- 二级菜单项 -->
+          <div
+            class="secondary-menu-item"
+            :class="{
+              'is-active': activeMenuId === child.name,
+              'has-children': hasChildren(child),
+            }"
+            @click="handleSecondaryMenuClick(child)"
+          >
+            <div style="display: flex;">
+              <div class="menu-icon">
+                <svg-icon size="20px" :iconClass="child.icon || 'menu'" />
+              </div>
+              <span class="secondary-title">{{ child.title }}</span>
+            </div>
+
+            <!-- 三级菜单 -->
+            <div v-if="hasChildren(child)" class="tertiary-menu">
+              <span
+                v-for="grandChild in child.children"
+                :key="grandChild.name"
+                class="tertiary-menu-item"
+                :class="{ 'is-active': activeMenuId === grandChild.name }"
+                @click.stop="handleTertiaryMenuClick(grandChild)"
+              >
+                {{ grandChild.title }}
+              </span>
+            </div>
+          </div>
+        </template>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { onMounted, inject, reactive, ref, computed } from "vue";
+import { onMounted, inject, ref, reactive, computed } from "vue";
 import PageFactory from "@/core/PageFactory";
 import { getMenu } from "@/api/init";
 import SvgIcon from "@/core/components/SvgIcon/index.vue";
 
 // 获取父页面数据
-const MenuRef = ref(null);
 const props = defineProps(["data"]);
 const menuItems = ref([]);
 const homePage = inject("homePage");
-const selectNav = reactive("");
+const activeMenuId = ref("");
+const activeMainMenu = ref(null);
+
+// 判断是否有子菜单
+const hasChildren = (item) => {
+  return item.children && item.children.length > 0;
+};
+
+// 判断父菜单是否处于激活状态（现在改为判断是否应该展开显示子菜单）
+const isParentActive = (item) => {
+  if (!hasChildren(item)) return false;
+
+  // 如果一级菜单本身被激活，或者其子菜单被激活，都应该展开
+  if (activeMenuId.value === item.name) return true;
+
+  // 检查直接子菜单
+  const hasActiveChild = item.children.some(
+    (child) => child.name === activeMenuId.value
+  );
+  if (hasActiveChild) return true;
+
+  // 检查孙子菜单
+  return item.children.some((child) => {
+    if (hasChildren(child)) {
+      return child.children.some(
+        (grandChild) => grandChild.name === activeMenuId.value
+      );
+    }
+    return false;
+  });
+};
 
 // 递归转换菜单数据结构
 const transformMenuData = (menuData) => {
@@ -45,6 +118,7 @@ const transformMenuData = (menuData) => {
       menuItem.children = item.functionList.map((func) => ({
         title: func.functionName,
         name: func.functionId,
+        icon: func.icon,
         item: func,
         children: [],
       }));
@@ -65,19 +139,12 @@ const transformMenuData = (menuData) => {
   });
 };
 
-const navList = computed(() => {
-  console.log(menuItems.value);
-  return menuItems.value;
-});
-
 // 定义菜单对象
 const _menuProvide = reactive(new PageFactory());
 
 // 初始化菜单数据
 onMounted(async () => {
   try {
-    //菜单判断一下 当前是什么环境：main：运行环境，setting：开发环境
-    //运行环境 菜单是请求接口，setting是json
     if (homePage._pageCode == "main") {
       let { data = [] } = await getMenu();
       menuItems.value = transformMenuData(data);
@@ -87,6 +154,7 @@ onMounted(async () => {
         _menuProvide.getPageData().map((x) => ({
           title: x.title,
           name: x.id,
+          icon: x.icon,
           item: x,
         })) || [];
     }
@@ -95,165 +163,327 @@ onMounted(async () => {
     if (homePage) {
       _menuProvide.setHomeProvide(homePage);
     }
-    _menuProvide.setElement(MenuRef);
   } catch (error) {
     console.error("菜单初始化失败：", error);
   }
 });
 
-// 递归查找菜单项
-const findMenuItem = (menuList, targetItem) => {
-  for (const menu of menuList) {
-    // 检查当前菜单项
-    if (menu.item === targetItem) {
-      return menu;
-    }
+// 处理一级菜单点击
+const handlePrimaryMenuClick = (menuItem) => {
+  console.log("点击一级菜单：", menuItem);
 
-    // 检查功能列表
-    if (menu.item.functionList) {
-      for (const func of menu.item.functionList) {
-        if (func === targetItem) {
-          return { item: func, parentMenu: menu.item };
-        }
-      }
-    }
+  // 总是激活当前点击的菜单
+  activeMenuId.value = menuItem.name;
 
-    // 递归检查子菜单
-    if (menu.item.subMenuList) {
-      const found = findMenuItem(
-        menu.item.subMenuList.map((sub) => ({ item: sub })),
-        targetItem
-      );
-      if (found) {
-        return found;
-      }
-    }
+  // 如果有子菜单，显示右侧菜单
+  if (hasChildren(menuItem)) {
+    activeMainMenu.value = menuItem;
+  } else {
+    activeMainMenu.value = null;
   }
-  return null;
+
+  // 总是尝试创建窗口（如果有对应的功能）
+  createWindow(menuItem);
 };
 
-// 处理菜单点击
-function handleMenuClick({ menu }) {
-  console.log("点击的菜单项：", menu);
-  if (_menuProvide && menu && menu?.item?.click) {
-    _menuProvide.fireEvent({ eventName: menu?.item?.click, args: menu?.item });
+// 处理二级菜单点击
+const handleSecondaryMenuClick = (menuItem) => {
+  console.log("点击二级菜单：", menuItem);
+
+  // 总是激活当前点击的菜单
+  activeMenuId.value = menuItem.name;
+
+  // 总是尝试创建窗口（如果有对应的功能）
+  createWindow(menuItem);
+};
+
+// 处理三级菜单点击
+const handleTertiaryMenuClick = (menuItem) => {
+  console.log("点击三级菜单：", menuItem);
+
+  // 总是激活当前点击的菜单
+  activeMenuId.value = menuItem.name;
+
+  // 总是尝试创建窗口（如果有对应的功能）
+  createWindow(menuItem);
+};
+
+// 创建窗口的通用方法
+const createWindow = (menuItem) => {
+  // 触发自定义事件
+  if (_menuProvide && menuItem && menuItem?.item?.click) {
+    _menuProvide.fireEvent({
+      eventName: menuItem?.item?.click,
+      args: menuItem?.item,
+    });
   }
 
   // 判断是否为功能项，只有功能项才创建窗口
-  if (!menu.id && !menu?.item?.functionCode) return;
-  if (menu.item) {
+  if (!menuItem.name && !menuItem?.item?.functionCode) {
+    console.log("菜单项没有对应的功能代码，跳过窗口创建");
+    return;
+  }
+
+  // 如果只是分类菜单（有子菜单但本身不是功能项），也可以跳过窗口创建
+  if (hasChildren(menuItem) && !menuItem?.item?.functionCode) {
+    console.log("这是分类菜单，跳过窗口创建");
+    return;
+  }
+
+  if (menuItem.item) {
     homePage.create({
       data: {
         type: "window",
         ele: "window",
         code: "webrender",
         id:
-          menu.id ||
-          `${menu.item.moduleName}-${menu.item.moduleCode}-${menu.item.functionCode}`,
-        title: menu.title || menu.item.functionName,
+          menuItem.name ||
+          `${menuItem.item.moduleName}-${menuItem.item.moduleCode}-${menuItem.item.functionCode}`,
+        title: menuItem.title || menuItem.item.functionName,
         width: "100%",
         height: "85%",
         mask: false,
         origin: true,
         visible: true,
-        param: menu.item,
+        param: menuItem.item,
       },
     });
   }
-}
+};
 </script>
 
 <style lang="scss" scoped>
-.avatar-group {
+.split-menu-container {
+  display: flex;
+  width: 100%;
+  height: calc(100vh - 60px);
+  background: #f2f2f2;
+}
+
+/* 左侧一级菜单 */
+.primary-menu {
+  width: 125px;
+  background: #f2f2f2;
+  border-right: 1px solid #e9ecef;
+  overflow-y: auto;
+  flex-shrink: 0;
+
+  &::-webkit-scrollbar {
+    width: 0px;
+  }
+}
+
+.primary-menu-item {
   display: flex;
   flex-direction: column;
-  width: 100%;
-  padding: 8px 0;
+  align-items: center;
+  padding: 12px 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #e9ecef;
+  text-align: center;
 
-  .avatar-fit {
-    text-align: left;
-    padding: 12px 16px;
-    margin: 2px 8px;
+  &:hover {
+    background: #e9ecef;
+  }
+
+  &.is-active {
+    background: white;
+    border-top-left-radius: 50%;
+    border-bottom-left-radius: 50%;
+    color: #007bff;
+
+    .menu-icon {
+      color: #007bff;
+    }
+
+    .menu-title {
+      color: #007bff;
+    }
+  }
+
+  .menu-icon {
     display: flex;
     align-items: center;
-    border-radius: 4px;
-    transition: all 0.3s ease;
-    cursor: pointer;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 6px;
+    color: #6c757d;
+    transition: color 0.2s ease;
+
+    :deep(svg) {
+      width: 20px;
+      height: 20px;
+    }
+  }
+
+  .menu-title {
+    font-size: 16px;
+    font-weight: 400;
+    color: #495057;
+    line-height: 1.3;
+    word-break: break-all;
+    transition: color 0.2s ease;
+  }
+}
+
+/* 右侧二三级菜单 */
+.secondary-menu {
+  flex: 1;
+  background: white;
+  overflow-y: auto;
+  min-width: 198px;
+  padding: 60px 0;
+
+  &::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: #f1f1f1;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background: #c1c1c1;
+    border-radius: 3px;
 
     &:hover {
-      background-color: #ecf5ff;
-      .title {
-        color: #409eff;
-      }
-    }
-
-    .avatar {
-      margin-right: 12px;
-      flex-shrink: 0;
-    }
-
-    .menu-icon-placeholder {
-      width: 32px;
-      height: 32px;
-      margin-right: 12px;
-      flex-shrink: 0;
-    }
-
-    .title {
-      font-size: 14px;
-      color: #606266;
-      transition: color 0.3s ease;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      background: #a8a8a8;
     }
   }
 }
 
-/* 确保与折叠状态兼容 */
-:deep(.menu-collapsed) {
-  .avatar-fit {
-    justify-content: center;
-    padding: 12px 4px;
+.secondary-menu-content {
+  padding: 8px 0;
+}
 
-    .avatar,
-    .menu-icon-placeholder {
-      margin-right: 0;
+.secondary-menu-item {
+  cursor: pointer;
+  transition: background 0.2s ease;
+
+  &:hover {
+    background: #f2f2f2;
+  }
+
+  &.is-active {
+    background: #e7f3ff;
+
+    .secondary-title {
+      color: #007bff;
+      font-weight: 500;
+    }
+  }
+
+  .secondary-title {
+    display: block;
+    font-size: 14px;
+    font-weight: 400;
+    color: #606060;
+    line-height: 1.4;
+    margin-bottom: 8px;
+    transition: all 0.2s ease;
+  }
+}
+
+.tertiary-menu {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid #e9ecef;
+}
+
+.tertiary-menu-item {
+  display: inline-block;
+  padding: 4px 12px;
+  background: #f2f2f2;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  font-size: 12px;
+  color: #6c757d;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+
+  &:hover {
+    background: #e9ecef;
+    border-color: #dee2e6;
+    color: #495057;
+    transform: translateY(-1px);
+  }
+
+  &.is-active {
+    background: #007bff;
+    border-color: #007bff;
+    color: white;
+  }
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .split-menu-container {
+    height: calc(100vh - 60px);
+    flex-direction: column;
+  }
+
+  .primary-menu {
+    width: 100%;
+    height: auto;
+    display: flex;
+    overflow-x: auto;
+    border-right: none;
+    border-bottom: 1px solid #e9ecef;
+  }
+
+  .primary-menu-item {
+    min-width: 80px;
+    padding: 12px 8px;
+
+    .menu-icon {
+      width: 24px;
+      height: 24px;
+      margin-bottom: 4px;
+
+      :deep(svg) {
+        width: 16px;
+        height: 16px;
+      }
     }
 
-    .title {
-      display: none;
+    .menu-title {
+      font-size: 12px;
+    }
+  }
+
+  .secondary-menu {
+    height: calc(100vh - 200px);
+  }
+}
+
+/* 菜单收缩状态 */
+.menu-collapsed {
+  .primary-menu {
+    width: 60px;
+
+    .primary-menu-item {
+      padding: 16px 8px;
+
+      .menu-title {
+        display: none;
+      }
     }
   }
 }
 
-/* 多级菜单样式 */
-:deep(.vxe-menu) {
-  .vxe-menu-item {
-    &.has-children {
-      .vxe-menu-item-title::after {
-        content: "▶";
-        float: right;
-        transition: transform 0.3s ease;
-      }
-
-      &.is-expanded .vxe-menu-item-title::after {
-        transform: rotate(90deg);
-      }
-    }
-  }
-
-  .vxe-menu-submenu {
-    padding-left: 20px;
-
-    .vxe-menu-item {
-      font-size: 13px;
-      color: #909399;
-
-      &:hover {
-        background-color: #f5f7fa;
-      }
-    }
-  }
+/* 空状态 */
+.secondary-menu-empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #adb5bd;
+  font-size: 14px;
 }
 </style>

@@ -150,8 +150,8 @@ export default {
           message: "该字段为必填字段!",
         });
       }
-      rules = [...rules, ...this.rules];
-
+      rules = [ ...this.rules,...rules];
+      
       return rules;
     },
     formConfig() {

@@ -28,7 +28,7 @@ export function comUtils(CT) {
   function getBI() {
     const FMC = CT.formConfig.moduleCode; // module code
     const FMN = CT.formConfig.moduleName; // module name
-    const FFC = CT.formConfig.functionCode; // function code
+    const FFC = CT.formConfig.modelCode; // function code
 
     const CC = CT; // current component
     const AC = CT.refList; // all components
@@ -53,15 +53,19 @@ export function comUtils(CT) {
    * @param {object} refList - 表单引用列表
    * @returns {object} - 表单数据对象
    */
-  function getFormData(selRow, refList) {
+  function getFormData(selRow, refList, isAdd) {
     var row = selRow;
     var newRow = { ...row };
+    var formdata =
+      refList["v_form_ref"] && !isAdd
+        ? refList["v_form_ref"].formDataModel
+        : {};
     Object.keys(row).forEach((key) => {
       if (refList[key] && typeof refList[key].getValue === "function") {
         newRow[key] = refList[key].getValue();
       }
     });
-    return newRow;
+    return Object.assign(formdata, newRow);
   }
 
   /**
@@ -71,7 +75,8 @@ export function comUtils(CT) {
    * @param {boolean} isAdd - 是否新增模式（true: 清空表单；false: 填充数据）
    * @param {string[]} ignoreKeys - 需要忽略的字段（如 _X_ROW_KEY）
    */
-  function setFormData(selRow, refList, isAdd, signName, ignoreKeys = []) {
+  function setFormData({ selRow, refList, isAdd, signName, ignoreKeys = [] }) {
+    signName && !isAdd && refList && refList["v_form_ref"].setFormData(selRow);
     Object.keys(selRow).forEach((key) => {
       // 跳过忽略的字段或表单不存在的字段
       if (ignoreKeys.includes(key) || refList[key] === undefined) return;
@@ -83,6 +88,7 @@ export function comUtils(CT) {
     setTimeout(() => {
       if (isAdd) {
         for (var key in refList[signName].selRow) {
+          if (key == "_X_ROW_KEY") continue;
           if (typeof refList[signName].selRow[key] === "number") {
             refList[signName].selRow[key] = 0;
           } else if (typeof refList[signName].selRow[key] === "string") {
@@ -101,8 +107,7 @@ export function comUtils(CT) {
    * @param {object} queryScheme - 查询条件对象
    * @param {object} treeNode - 树节点对象
    */
-  function loadGridData(signName, queryScheme, treeNode) {
-    
+  function loadGridData({ service, signName, queryScheme, treeNode }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
@@ -118,7 +123,7 @@ export function comUtils(CT) {
       ...(BI.CC.field.type === "tree" && { treeNode: treeNode }),
       sortItems: transformSortItems(field.options?.sortBy),
     };
-    BIM.execRequest(`${functionCode}.query`, requestParams)
+    BIM.execRequest(`${service || functionCode + ".query"}`, requestParams)
       .then(({ data: { rows = [], total = 0 } = {} }) => {
         BI.AC[signName].setData(rows, total);
         BIM.Message.notifySuccess("查询成功！");
@@ -132,7 +137,7 @@ export function comUtils(CT) {
    * 删除表格数据
    * @param {string} signName - 表格控件编号
    */
-  function deleteGridData(signName) {
+  function deleteGridData({ service, signName }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
@@ -159,7 +164,7 @@ export function comUtils(CT) {
     }
     const performDelete = async (data) => {
       const dataArray = Array.isArray(data) ? data : [data];
-      return await BIM.execRequest(`${functionCode}.delete`, {
+      return await BIM.execRequest(`${service || functionCode + ".delete"}`, {
         moduleName,
         moduleCode,
         data: dataArray,
@@ -171,7 +176,7 @@ export function comUtils(CT) {
         if (!delRes.success) {
           return BIM.Message.notifyError("删除失败，请稍后重试！");
         }
-        BI.CC.comUtils.loadGridData(signName);
+        BI.CC.comUtils.loadGridData({ signName });
         BIM.Message.notifySuccess("删除成功！");
       } catch (error) {
         BIM.Message.notifyError("删除失败，请稍后重试！");
@@ -191,7 +196,7 @@ export function comUtils(CT) {
    * 新增表格数据
    * @param {string} signName - 表格控件编号
    */
-  function addGridData(signName) {
+  function addGridData({ signName }) {
     const BI = getBI();
     const BIM = getBIM();
     const tableList = BI.AC[signName];
@@ -214,7 +219,7 @@ export function comUtils(CT) {
    * 保存表格数据
    * @param {string} signName - 表格控件编号
    */
-  function saveGridData(signName) {
+  function saveGridData({ signName, service }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
@@ -235,12 +240,12 @@ export function comUtils(CT) {
         if (errMap) {
           return BIM.Message.notifyError(`校验不通过！`);
         }
-        await BIM.execRequest(`${functionCode}.save`, {
+        await BIM.execRequest(`${service || functionCode + ".save"}`, {
           moduleName,
           moduleCode,
           data: records,
         });
-        BI.CC.comUtils.loadGridData(signName);
+        BI.CC.comUtils.loadGridData({ signName });
         BIM.Message.notifySuccess(
           `${type === "insert" ? "新增" : "修改"}成功！`
         );
@@ -259,8 +264,7 @@ export function comUtils(CT) {
    *
    * 注意：暂时针对侧滑抽屉，后续更改"searchValue": [BI.AC[signName].selRow[key]],参数调整
    */
-  function loadFormData(signName, key) {
-    
+  function loadFormData({ service, signName, key }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
@@ -280,13 +284,19 @@ export function comUtils(CT) {
           ],
         }
       : { moduleName, moduleCode };
-    BIM.execRequest(`${functionCode}.query`, requestParams)
+    BIM.execRequest(`${service || functionCode + ".query"}`, requestParams)
       .then((res) => {
         var data = res.data.rows[0];
         if (BI.AC) {
-          BI.CC.comUtils.setFormData(data, BI.AC, false, "");
+          BI.CC.comUtils.setFormData({
+            selRow: data,
+            refList: BI.AC,
+            isAdd: false,
+            signName,
+          });
         } else {
-          BI.CC.setFormData(data);
+          BI.CC.setFormData({ selRow: data });
+          BI.CC.setFormData({ data });
         }
         BIM.Message.notifySuccess("查询成功！");
       })
@@ -302,7 +312,7 @@ export function comUtils(CT) {
    *
    * 注意：暂时针对侧滑抽屉，后续更改drawer.drawerVisible = false;关闭窗口调整
    */
-  function deleteFormData(signName, gridName) {
+  function deleteFormData({ service, signName, gridName }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
@@ -310,12 +320,12 @@ export function comUtils(CT) {
     const functionCode = BI.FFC;
 
     var drawer = BI.AC[signName];
-    var row = drawer.selRow;
+    var row = drawer.selRow || drawer.formModel;
     var data = BI.CC.comUtils.getFormData(row, BI.AC);
 
     const performDelete = async (data) => {
       const dataArray = Array.isArray(data) ? data : [data];
-      return await BIM.execRequest(`${functionCode}.delete`, {
+      return await BIM.execRequest(`${service || functionCode + ".delete"}`, {
         moduleName,
         moduleCode,
         data: dataArray,
@@ -328,7 +338,7 @@ export function comUtils(CT) {
           return BIM.Message.notifyError("删除失败，请稍后重试！");
         }
         drawer.drawerVisible = false; // 关闭窗口
-        BI.CC.comUtils.loadGridData(gridName); // 刷新表格数据
+        gridName && BI.CC.comUtils.loadGridData({ signName: gridName }); // 刷新表格数据
         BIM.Message.notifySuccess("删除成功！");
       } catch (error) {
         BIM.Message.notifyError("删除失败，请稍后重试！");
@@ -348,10 +358,15 @@ export function comUtils(CT) {
    * 新增表单数据
    * @param {string} signName - 表单控件编号
    */
-  function addFormData(signName) {
+  function addFormData({ signName }) {
     const BI = getBI();
     var row = BI.AC[signName].selRow;
-    BI.CC.comUtils.setFormData(row, BI.AC, true, signName);
+    BI.CC.comUtils.setFormData({
+      selRow: row,
+      refList: BI.AC,
+      isAdd: true,
+      signName: signName,
+    });
   }
 
   /**
@@ -362,7 +377,7 @@ export function comUtils(CT) {
    *
    * 注意：暂时针对侧滑抽屉，后续更改drawer.drawerVisible = false;关闭窗口调整
    */
-  function saveFormData(signName, isRC, gridName) {
+  function saveFormData({ service, signName, isRC, gridName, isAdd }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
@@ -370,15 +385,16 @@ export function comUtils(CT) {
     const functionCode = BI.FFC;
     var drawer = BI.AC[signName];
     var row = drawer.selRow || drawer.formModel;
-    var data = BI.CC.comUtils.getFormData(row, BI.AC);
-    BIM.execRequest(`${functionCode}.save`, {
+    var data = BI.CC.comUtils.getFormData(row, BI.AC, isAdd);
+
+    BIM.execRequest(`${service || functionCode + ".save"}`, {
       moduleName,
       moduleCode,
       data: [data],
     })
       .then((res) => {
         if (gridName) {
-          BI.CC.comUtils.loadGridData(gridName);
+          BI.CC.comUtils.loadGridData({ signName: gridName });
         }
         if (isRC) {
           drawer.drawerVisible = false;
@@ -395,12 +411,12 @@ export function comUtils(CT) {
    * @param {string} functionCode - 功能代码
    * @param {string} signName - 树控件编号
    */
-  function loadTreeData(functionCode, signName) {
+  function loadTreeData({ service, signName }) {
     const BI = getBI();
     const BIM = getBIM();
     const moduleName = BI.FMN;
     const moduleCode = BI.FMC;
-    BIM.execRequest(`${functionCode}.tree`, { moduleName, moduleCode })
+    BIM.execRequest(`${service}`, { moduleName, moduleCode })
       .then(({ data }) => {
         const treeData = data?.rows || [];
         const treeComponent = BI.AC[signName];

@@ -1,7 +1,7 @@
 const Init = () => import("@/views/initPage.vue");
 const mainlayout = () => import("@/views/mainlayout.vue");
 const setting = () => import("@/views/setting.vue");
-const functiongenerator = () => import("@/views/idk/functionGenerator.vue");
+const functiongenerator = () => import( "@/core/components/functionGenerator.vue")
 const directFunction = () => import("@/views/directFunction.vue");
 
 export default [

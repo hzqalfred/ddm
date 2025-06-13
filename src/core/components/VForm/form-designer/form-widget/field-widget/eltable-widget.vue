@@ -174,7 +174,7 @@
           "
           :title="item.title"
           :field="item.field"
-          :fixed="item.fixed ? 'left' : '' "
+          :fixed="item.fixed ? 'left' : ''"
           :width="item.width || 200"
           :align="item.align"
           :header-align="item.align"
@@ -452,6 +452,17 @@ export default {
 
     // 双击单元格事件
     cellDBLClickEvent({ row, column }) {
+      
+      let events = this.formConfig.eventMap[
+        `${this.field.id}.onDBLClick`
+      ];
+      let obj = this.formConfig?.globalObject;
+      if (obj && obj[events]) {
+        let dblFn = obj[events];
+        dblFn.call(this, row, column);
+        return
+      }
+
       var strs = column.editRender?.selectTableRowSet;
       if (strs) {
         let homePage = this.pageProvide.getHomeProvide();

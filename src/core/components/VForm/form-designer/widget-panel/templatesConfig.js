@@ -17,6 +17,15 @@ export const formTemplates = [
     description: "表单模板详细说明...",
     type: "grid",
   },
+   {
+    title: "表格[含表单]",
+    imgUrl:
+      "https://ks3-cn-beijing.ksyuncs.com/vform-static/form-samples/t1.png",
+    jsonUrl:
+      "https://ks3-cn-beijing.ksyuncs.com/vform-static/form-samples/json1.txt",
+    description: "表单模板详细说明...",
+    type: "grid-form",
+  },
   {
     title: "树表",
     imgUrl:

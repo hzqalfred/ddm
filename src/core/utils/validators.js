@@ -107,12 +107,13 @@ const FormValidators = {
   */
 
   regExp(rule, value, callback) {
+    
     //空值不校验
     if (isNull(value) || (value.length <= 0)) {
       callback()
       return
     }
-
+    value = value?.value || value
     const pattern = eval(rule.regExp)
     if (!pattern.test(value)) {
       let errTxt = rule.errorMsg || '[' + rule.label + ']invalid value'

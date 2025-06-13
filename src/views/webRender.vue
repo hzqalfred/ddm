@@ -85,6 +85,8 @@ const loginFlag = computed(
 );
 
 onMounted(async () => {
+  
+
   // 目前唯运行端 originData.id是由moduleName-moduleCode-functionCode组成
   if (originData?.id && originData?.id?.split("-")?.length == 3) {
     let [moduleName, moduleCode, functionCode] = originData?.id?.split("-");
@@ -109,7 +111,7 @@ onMounted(async () => {
     // 关键：同步表单字段到 DataCenter
     if (mainFormRef.value) {
       const formData = mainFormRef.value.getFormData(false);
-      dataCenter.setData(formData, { merge: true });
+      dataCenter.setData(formData);
     }
   }, 1);
 });
@@ -163,6 +165,7 @@ const getList = (param) => {
 };
 // 添加到 handleNodeClick 方法中
 const handleNodeClick = async ({ node }) => {
+  
   mainFormJson.value = "";
   await loadMainForm(node.functionCode);
   dataCenter.reinitialize();

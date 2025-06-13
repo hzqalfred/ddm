@@ -65,7 +65,12 @@
                 <el-input v-model="editForm.dbSource" maxlength="50"/>
               </el-form-item>
             </el-col>
-            <el-col :span="16">
+            <el-col :span="8">
+              <el-form-item label="关联表" prop="tableNames">
+                <el-input v-model="editForm.tableNames" maxlength="50"/>
+              </el-form-item>
+            </el-col>
+            <el-col :span="8">
               <el-form-item label="备注" prop="note">
                 <el-input v-model="editForm.note"/>
               </el-form-item>
@@ -157,6 +162,7 @@ let editForm = reactive({
   objectCode: '',
   objectName: '数据对象',
   dbSource: 'default',
+  tableNames: '',
   note: ''
 })
 const editRules = reactive({
@@ -177,6 +183,7 @@ const resetEditForm = () =>{
   editForm.objectCode= ''
   editForm.objectName= ''
   editForm.dbSource= 'default'
+  editForm.tableNames= ''
   editForm.note= ''
   editForm.methodDtos = []
 }

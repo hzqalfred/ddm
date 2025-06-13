@@ -19,7 +19,7 @@
         :loading="field.options.loading" 
         :disabled="field.options.comdisabled" 
         :hidden="field.options.hidden"
-        @click="handleButtonWidgetClick">
+        v-debounce="handleButtonWidgetClick">
         {{ field.options.title ||  field.options.label}}      
       </vxe-button>
     </div>

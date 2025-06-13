@@ -98,21 +98,6 @@
               "style": "height: 100%; background-color: #f8f8f8; border-right: 1px solid #eaeaea; display: flex; flex-direction: column;",
               "data": [
                 {
-                  "type": "layout",
-                  "ele": "row",
-                  "id": "left_menu_search_row",
-                  "style": "padding: 16px 12px; border-bottom: 1px solid #eaeaea;",
-                  "data": [
-                    {
-                      "type": "control",
-                      "ele": "txtsearch",
-                      "id": "menu_search",
-                      "placeholder": "搜索",
-                      "input": "handleMenuSearch"
-                    }
-                  ]
-                },
-                {
                   "type": "control",
                   "ele": "menu",
                   "id": "left_menu"

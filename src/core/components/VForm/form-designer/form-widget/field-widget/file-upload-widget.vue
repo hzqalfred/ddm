@@ -11,7 +11,6 @@
     :sub-form-col-index="subFormColIndex"
     :sub-form-row-id="subFormRowId"
   >
-    <!-- el-upload增加:name="field.options.name"后，会导致又拍云上传失败！故删除之！！ -->
     <vxe-upload
       ref="fieldEditor"
       :disabled="field.options.disabled"
@@ -21,24 +20,16 @@
       v-model="fileList"
       :show-list="field.options.showFileList"
       :class="{ hideUploadDiv: uploadBtnHidden }"
-      :before-upload="beforeFileUpload"
       @upload-success="handleFileUpload"
       @upload-error="handleUploadError"
       :upload-method="uploadFile"
       @remove="removeUploadFile"
       :limit-count="field.options.limit"
       :limit-size="field.options.fileMaxSize"
-      :fileTypes="field.options.fileTypes"
+      :file-types="field.options.fileTypes"
     >
-      <template #tip>
-        <div class="el-upload__tip" v-if="!!field.options.uploadTip">
-          {{ field.options.uploadTip }}
-        </div>
-      </template>
       <template #default>
-        <el-button :disabled="field.options.disabled" type="primary" link>
-          <i class="el-icon-plus avatar-uploader-icon"></i>
-        </el-button>
+        <vxe-button>附件</vxe-button>
       </template>
     </vxe-upload>
   </form-item-wrapper>
@@ -139,21 +130,6 @@ export default {
   },
 
   methods: {
-    beforeFileUpload(file) {
-      this.uploadData.key = file.name;
-      if (this.field.options.onBeforeUpload) {
-        let bfFunc = new Function("file", this.field.options.onBeforeUpload);
-        let result = bfFunc.call(this, file);
-        if (typeof result === "boolean") {
-          return result;
-        } else {
-          return true;
-        }
-      }
-
-      return true;
-    },
-
     updateFieldModelAndEmitDataChangeForUpload(
       fileList,
       customResult,
@@ -195,7 +171,6 @@ export default {
 
     uploadFile(param) {
       var fileObj = param.file;
-      this.beforeFileUpload(fileObj);
       var form = new FormData();
       // 文件对象
       form.append("file", fileObj);
@@ -218,16 +193,29 @@ export default {
     handleFileUpload(res, file, fileList) {
       if (file.status === "success") {
         let customResult = null;
-        if (this.field.options.onUploadSuccess) {
-          let mountFunc = new Function(
-            "result",
-            "file",
-            "fileList",
-            this.field.options.onUploadSuccess
-          );
-          customResult = mountFunc.call(this, res, file, fileList);
+        // if (this.field.options.onUploadSuccess) {
+        //   let mountFunc = new Function(
+        //     "result",
+        //     "file",
+        //     "fileList",
+        //     this.field.options.onUploadSuccess
+        //   );
+        //   customResult = mountFunc.call(this, res, file, fileList);
+        // }
+        try {
+          let event =
+            (this.formConfig.eventMap &&
+              this.formConfig.eventMap[`${this.field.id}.onUploadSuccess`]) ||
+            "";
+          let obj = this.formConfig?.globalObject;
+          if (obj && event && obj[event]) {
+            let customFn = obj[event];
+            customFn.call(this, res, file, fileList);
+          }
+        } catch (error) {
+          this.Message.notifyError("请检查全局函数的调用");
+          console.error("请检查全局函数的调用");
         }
-
         this.updateFieldModelAndEmitDataChangeForUpload(
           fileList,
           customResult,
@@ -284,32 +272,60 @@ export default {
         );
         // this.uploadBtnHidden = this.fileList.length >= this.field.options.limit
 
-        if (this.field.options.onFileRemove) {
-          let customFn = new Function(
-            "file",
-            "fileList",
-            this.field.options.onFileRemove
-          );
-          customFn.call(this, foundFile, this.fileList);
+        // if (this.field.options.onFileRemove) {
+        //   let customFn = new Function(
+        //     "file",
+        //     "fileList",
+        //     this.field.options.onFileRemove
+        //   );
+        //   customFn.call(this, foundFile, this.fileList);
+        // }
+        try {
+          let event =
+            (this.formConfig.eventMap &&
+              this.formConfig.eventMap[`${this.field.id}.onFileRemove`]) ||
+            "";
+          let obj = this.formConfig?.globalObject;
+          if (obj && event && obj[event]) {
+            let customFn = obj[event];
+            customFn.call(this, foundFile, this.fileList);
+          }
+        } catch (error) {
+          this.Message.notifyError("请检查全局函数的调用");
+          console.error("请检查全局函数的调用");
         }
       }
     },
 
     handleUploadError(err, file, fileList) {
-      if (this.field.options.onUploadError) {
-        let customFn = new Function(
-          "error",
-          "file",
-          "fileList",
-          this.field.options.onUploadError
-        );
-        customFn.call(this, err, file, fileList);
-      } else {
-        this.$message({
-          message: err.msg || this.i18nt("render.hint.uploadError") + err,
-          duration: 3000,
-          type: "error",
-        });
+      // if (this.field.options.onUploadError) {
+      //   let customFn = new Function(
+      //     "error",
+      //     "file",
+      //     "fileList",
+      //     this.field.options.onUploadError
+      //   );
+      //   customFn.call(this, err, file, fileList);
+      // } else {
+      //   this.$message({
+      //     message: err.msg || this.i18nt("render.hint.uploadError") + err,
+      //     duration: 3000,
+      //     type: "error",
+      //   });
+      // }
+      try {
+        let event =
+          (this.formConfig.eventMap &&
+            this.formConfig.eventMap[`${this.field.id}.onUploadError`]) ||
+          "";
+        let obj = this.formConfig?.globalObject;
+        if (obj && event && obj[event]) {
+          let customFn = obj[event];
+          customFn.call(this, err, file, fileList);
+        }
+      } catch (error) {
+        this.Message.notifyError("请检查全局函数的调用");
+        console.error("请检查全局函数的调用");
       }
     },
   },

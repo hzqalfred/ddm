@@ -28,7 +28,7 @@ import "./assets/style/index.css";
 // 以下是对 VForm 的组件【全局注册】
 import ContainerItems from "@/core/components/VForm/form-render/container-item/index";
 import ContainerWidgets from "@/core/components/VForm/form-designer/form-widget/container-widget/index";
-
+import { debounceDirective } from './core/utils/debounce'
 const app = createApp(App);
 
 for (const [key, component] of Object.entries(ElementPlusIconsVue)) {
@@ -40,7 +40,7 @@ app.config.warnHandler = () => {
 
 app.component("draggable", Draggable);
 app.provide("$request", request);
-
+app.directive('debounce', debounceDirective)
 app
   .use(ElementPlus)
   .use(pinia)

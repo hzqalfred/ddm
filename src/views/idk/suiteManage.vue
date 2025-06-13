@@ -397,7 +397,7 @@ import SelectIcon from "@/core/components/SelectIcon/index.vue";
 import SvgIcon from "@/core/components/SvgIcon/index.vue";
 import messageHandler from "@/core/Message";
 import designer from "@/views/designer/index.vue";
-import functionGenerator from "@/views/idk/functionGenerator.vue";
+import functionGenerator from "@/core/components/functionGenerator.vue";
 import wflow from "@/views/designer/wflow/index.vue";
 import axios from "axios";
 import { VxeUI } from "vxe-pc-ui";
@@ -1140,7 +1140,7 @@ const handleFunctionGuide = (row = null) => {
   const selectedRow = row || functionTableRef.value.getRadioRecord();
 
   if (!selectedRow) {
-    return messageHandler.notifyWarning("请先选择数据");
+    // return messageHandler.notifyWarning("请先选择数据");
   }
   guideData.value = { ...formItemData.value, ...selectedRow };
   guideKey.value = Date.now().toString();
@@ -1214,6 +1214,7 @@ const handleInterfaceDesign = async (row, type) => {
     functionType: res.data.functionType,
     tree: res.data.tree,
     formColumnNums: res.data.formColumnNums,
+    tableName: res.data.tableName,
     functionId: row.functionId,
   };
   homePage.create({
@@ -1344,6 +1345,7 @@ const reloadJson = (json) => {
   if (json) {
     const param = Object.assign({}, guideData.value);
     param.designJson = json;
+    param.functionCode = json?.formConfig?.functionCode || ''
     homePage.create({
       data: {
         type: "window",

@@ -2,7 +2,7 @@
   <div style="padding:0 20px;">
     <!-- 功能基础信息区域 -->
     <vxe-tip status="primary">功能基础信息</vxe-tip>
-    <vxe-button size="mini" status="success" @click="saveInfo">
+    <vxe-button size="mini" status="success" v-debounce="saveInfo">
       保存
     </vxe-button>
     <div style="margin: 10px 0;">
@@ -17,6 +17,7 @@
           <el-select v-model="formData.functionType">
             <el-option label="表单" value="form" />
             <el-option label="表格" value="grid" />
+            <el-option label="表格[含表单]" value="grid-form" />
             <el-option label="树表" value="tree-grid" />
             <el-option label="树表单" value="tree-grid-form" />
           </el-select>
@@ -32,6 +33,9 @@
         </vxe-form-item>
         <vxe-form-item title="表单默认列数" field="formColumnNums" span="6">
           <el-input v-model="formData.formColumnNums" />
+        </vxe-form-item>
+        <vxe-form-item title="主表" field="tableName" span="6">
+          <el-input v-model="formData.tableName" />
         </vxe-form-item>
         <vxe-form-item title="数据对象绑定" field="modelCode" span="16">
           <!-- <el-select-v2
@@ -92,7 +96,13 @@
             <span>{{ row.methodName }}</span>
           </template>
           <template #edit="{ row }">
-            <vxe-select v-model="row.methodName" size="small" clearable>
+            <vxe-select
+              v-model="row.methodName"
+              size="small"
+              clearable
+              @change="(val) => attrSelect(row, val.value)"
+            >
+              <!-- <vxe-option label="查询:表单" value="查询:表单" /> -->
               <vxe-option label="查询" value="查询" />
               <vxe-option label="保存" value="保存" />
               <vxe-option label="删除" value="删除" />
@@ -100,6 +110,7 @@
               <vxe-option label="导入" value="导入" />
               <vxe-option label="导出" value="导出" />
               <vxe-option label="打印" value="打印" />
+              <vxe-option label="附件" value="附件" />
               <vxe-option label="其他" value="其他" />
             </vxe-select>
           </template>
@@ -111,7 +122,11 @@
         </vxe-column>
         <vxe-column field="methodAttribute" title="属性" :edit-render="{}">
           <template #edit="{ row }">
-            <vxe-input size="small" v-model="row.methodAttribute" />
+            <vxe-input
+              size="small"
+              v-model="row.methodAttribute"
+              @input="onMethodAttributeInput(row)"
+            />
           </template>
         </vxe-column>
         <vxe-column field="methodDescription" title="说明" :edit-render="{}">
@@ -120,7 +135,7 @@
           </template>
         </vxe-column>
         <vxe-column fixed="right" align="center" width="200" title="操作">
-          <template #default="{ row }">
+          <template #default="{ row,$rowIndex }">
             <!-- <vxe-button
               mode="text"
               status="primary"
@@ -131,7 +146,7 @@
             <vxe-button
               mode="text"
               status="error"
-              @click="removeItem('method', row)"
+              @click="removeItem('method', row, $rowIndex)"
             >
               删除
             </vxe-button>
@@ -601,6 +616,7 @@ import {
   saveColumn,
   deleteColumn,
   allDataService,
+  saveDesignJson,
   saveBaseInfo,
 } from "@/api/functionGenerator";
 import messageHandler from "@/core/Message";
@@ -890,6 +906,33 @@ export default {
       sqlConfig: { minRows: 2, maxRows: 10 },
       sqlParsed: false,
 
+      // 统一的方法配置映射
+      METHOD_CONFIGS: {
+        // "查询:表格": {
+        //   service: "",
+        //   name: "",
+        //   belongTo: "",
+        //   queryScheme: {
+        //     operator: "eq",
+        //     searchColumn: "",
+        //     searchValue: "",
+        //   },
+        // },
+        查询: { name: "", service: "", key: "" },
+        删除: { name: "", service: "" },
+        树形: {
+          service: "",
+          name: "",
+          queryScheme: {
+            operator: "eq",
+            searchColumn: "",
+            searchValue: "",
+          },
+        },
+        附件: { name: "", service: "/file/upload" },
+        // "保存" 需要特殊处理，根据 isGrid 动态生成
+      },
+
       // 列表数据
       methodList: [],
       treeList: [],
@@ -933,19 +976,18 @@ export default {
       });
     },
     autoQueryList() {
-      return this.columnList
-        .map((column) => ({
-          searchColumn: column.columnCode,
-          requestColumn: column.columnCode,
-          label: column.columnName,
-          columnName: column.columnName,
-          query: !!column.queryColumn , // 默认不启用查询
-          allowquery: !!column.queryColumn, // 允许查询
-          operator: "eq", // 默认等于操作符
-          defaultValue: column.defaultValue || "",
-          type: this.getInputTypeByColumnType(column.columnType), // 根据字段类型设置输入类型
-          options: null,
-        }));
+      return this.columnList.map((column) => ({
+        searchColumn: column.columnCode,
+        requestColumn: column.columnCode,
+        label: column.columnName,
+        columnName: column.columnName,
+        query: !!column.queryColumn, // 默认不启用查询
+        allowquery: !!column.queryColumn, // 允许查询
+        operator: "eq", // 默认等于操作符
+        defaultValue: column.defaultValue || "",
+        type: this.getInputTypeByColumnType(column.columnType), // 根据字段类型设置输入类型
+        options: null,
+      }));
     },
     isTreeType() {
       return ["tree-grid", "tree-grid-form"].includes(
@@ -1001,7 +1043,7 @@ export default {
       };
       return typeMap[columnType] || "input";
     },
-    saveInfo() {
+    async saveInfo(showMessage = true) {
       const formFields = {
         functionId: this.formData.functionId,
         functionName: this.formData.functionName,
@@ -1015,10 +1057,16 @@ export default {
         // 保留必要的基础字段
         moduleName: this.formData.moduleName,
         moduleCode: this.formData.moduleCode,
+        tableName: this.formData.tableName,
       };
-      saveBaseInfo(formFields).then((res) => {
-        messageHandler.notifyMsg(res.msg, res.success);
-      });
+      try {
+        let res = await saveBaseInfo(formFields);
+        this.formData.functionId = res.data;
+        if (showMessage) messageHandler.notifyMsg(res.msg, res.success);
+      } catch (error) {
+        if (showMessage) this.showMessage("基础信息保存失败", "error");
+        throw error;
+      }
     },
     getDataService() {
       let data = Object.assign({}, this.formData);
@@ -1030,6 +1078,74 @@ export default {
         }));
       });
     },
+
+    // 获取方法的默认配置
+    getDefaultConfig(methodName) {
+      if (methodName === "保存") {
+        return this.isGrid
+          ? { name: "", service: "" }
+          : { name: "", service: "", isRC: true, gridName: "" };
+      }
+      return this.METHOD_CONFIGS[methodName] || null;
+    },
+
+    // 检查是否为系统默认配置
+    isSystemGenerated(row) {
+      return row._isSystemGenerated === true;
+    },
+
+    // 检查是否有用户修改
+    hasUserModification(row) {
+      // 没有配置内容
+      if (!row.methodAttribute || !row.methodAttribute.trim()) {
+        return false;
+      }
+
+      // 如果是系统生成的配置，说明用户没有修改
+      if (this.isSystemGenerated(row)) {
+        return false;
+      }
+
+      // 其他情况都视为用户修改
+      return true;
+    },
+
+    // 监听用户输入（实时监听）
+    onMethodAttributeInput(row) {
+      // 用户开始输入时立即移除系统生成标记
+      if (row._isSystemGenerated) {
+        row._isSystemGenerated = false;
+        console.log("用户正在修改配置，移除系统生成标记");
+      }
+    },
+
+    async attrSelect(row, methodName) {
+      const defaultConfig = this.getDefaultConfig(methodName);
+
+      // if (!defaultConfig) {
+      //   row._isSystemGenerated = false;
+      //   return;
+      // }
+
+      if (!this.isSystemGenerated(row) && row.methodAttribute?.trim()) {
+        try {
+          const result = await VxeUI.modal.confirm({
+            content: `切换为"${methodName}"将覆盖您的自定义配置，确定继续吗？`,
+            confirmButtonText: "确定覆盖",
+            cancelButtonText: "保留修改",
+          });
+          if (result !== "confirm") return;
+        } catch {
+          return;
+        }
+      }
+
+      row.methodAttribute = defaultConfig ? JSON.stringify(defaultConfig) : "";
+      row._isSystemGenerated = true;
+
+      this.showMessage(`功能"${methodName}"配置已更新`, "success");
+    },
+
     initSortable() {
       const queryTable = this.$refs.xTable?.$el;
       if (!queryTable) return;
@@ -1136,6 +1252,7 @@ export default {
         throw error;
       }
     },
+
     // 新增行
     addMethodRow() {
       const newRow = {
@@ -1145,9 +1262,11 @@ export default {
         methodDescription: "",
         orderIndex: "",
         methodIds: "",
+        _isSystemGenerated: false, // 新行默认为非系统生成
       };
       this.methodList.push(newRow);
     },
+
     // 新增行
     addColumnRow() {
       const newRow = {
@@ -1194,37 +1313,43 @@ export default {
         }
       }
     },
-    async saveAllMethod() {
+    async saveAllMethod(showMessage = true) {
       // 验证必填字段
       const invalidRows = this.methodList.filter(
         (row) => !row.methodName || !row.methodCode
       );
 
       if (invalidRows.length > 0) {
-        this.showMessage("请填写完整的功能和配置项", "warning");
-        return;
+        if (showMessage)
+          this.showMessage("请填写完整的功能和配置项", "warning");
+        throw new Error("验证失败");
       }
 
       try {
         const param = this.getBaseParams();
         param.methodList = this.methodList;
         await saveMethod(param);
-        this.showMessage("保存成功", "success");
+        if (showMessage) this.showMessage("保存成功", "success");
         this.loadData(); // 重新加载数据
       } catch (error) {
-        this.showMessage("保存失败", "error");
+        if (showMessage) this.showMessage("保存失败", "error");
+        throw error;
       }
     },
 
-    async saveAllColumns() {
+    async saveAllColumns(showMessage = true) {
       // 验证必填字段
       const invalidRows = this.columnList.filter(
         (row) => !row.columnCode || !row.columnName || !row.columnType
       );
 
       if (invalidRows.length > 0) {
-        this.showMessage("请填写完整的字段编码、字段名称和字段类型", "warning");
-        return;
+        if (showMessage)
+          this.showMessage(
+            "请填写完整的字段编码、字段名称和字段类型",
+            "warning"
+          );
+        throw new Error("验证失败");
       }
 
       try {
@@ -1235,10 +1360,11 @@ export default {
         }));
 
         await saveColumn(param);
-        this.showMessage("保存成功", "success");
+        if (showMessage) this.showMessage("保存成功", "success");
         this.loadData(); // 重新加载数据
       } catch (error) {
-        this.showMessage("保存失败", "error");
+        if (showMessage) this.showMessage("保存失败", "error");
+        throw error;
       }
     },
 
@@ -1249,13 +1375,19 @@ export default {
       try {
         const res = await getFunctionDetail(this.getBaseParams());
         if (res.code === "200") {
-          this.methodList = res.data.methodList || [];
+          // 加载的数据默认视为系统生成（或根据实际情况调整）
+          this.methodList = (res.data.methodList || []).map((item) => ({
+            ...item,
+            _isSystemGenerated: false, // 从数据库加载的数据，保守起见标记为非系统生成
+          }));
           this.treeList = res.data.treeList || [];
           this.columnList = res.data.columnList || [];
           this.formData.modelCode =
             res.data.modelCode || this.formData.modelCode;
           this.formData.modelSql = res.data.modelSql;
           this.sqlParsed = !!res.data.modelSql;
+          this.formData.tableName = res.data.tableName;
+          this.formData.formColumnNums = res.data.formColumnNums;
         }
       } catch (error) {
         this.showMessage("数据加载失败", "error");
@@ -1271,13 +1403,20 @@ export default {
       let data = Object.assign({}, this.formData, {
         modelSql: this.formData.modelSql,
       });
+      if (data.modelCode) delete data.modelCode;
 
       try {
         const res = await parseModelSql(data);
         if (res.code === "200") {
           this.showMessage("解析成功", "success");
-          this.methodList = res.data.methodList || [];
+          // SQL解析生成的数据标记为系统生成
+          this.methodList = (res.data.methodList || []).map((item) => ({
+            ...item,
+            _isSystemGenerated: true, // SQL解析生成的配置标记为系统生成
+          }));
           this.columnList = res.data.columnList || [];
+          this.formData.modelCode = res.data.modelCode;
+          this.formData.functionId = res.data.functionId
           this.sqlParsed = true;
         } else {
           this.showMessage("SQL解析失败", "error");
@@ -1367,11 +1506,14 @@ export default {
     },
 
     // 通用删除
-    async removeItem(type, row) {
+    async removeItem(type, row, rowIndex) {
       try {
         await VxeUI.modal.confirm({ content: "确定要删除选中的数据吗？" });
-        await this.deleteItem(type, row);
-        this.loadData();
+        if (row.methodId) {
+          await this.deleteItem(type, row);
+        }
+
+        this.methodList.splice(rowIndex, 1);
         this.showMessage("删除成功", "success");
       } catch (error) {
         if (error !== "cancel") {
@@ -1450,6 +1592,7 @@ export default {
         param.methodList = selected.map((item) => ({
           ...item,
           orderIndex: 10,
+          _isSystemGenerated: true, // 导入的数据标记为系统生成
         }));
         await saveMethod(param);
         this.showPopup = false;
@@ -1507,10 +1650,17 @@ export default {
         const confirm = await VxeUI.modal.confirm({
           content: "是否重新生成grid、form设计文件？",
         });
+      
 
         if (confirm === "confirm") {
+          await this.saveInfo(false),
+            await Promise.all([
+              this.saveAllMethod(false),
+              this.saveAllColumns(false),
+            ]);
+
           const res = await getFunctionDetail(this.getBaseParams());
-          
+
           if (res.code === "200") {
             const formJson = {
               baseInfo: {
@@ -1522,11 +1672,14 @@ export default {
               },
               columnList: res.data.columnList || [],
               methodList: res.data.methodList || [],
-              queryList: this.autoQueryList,
+              queryList: this.queryList,
               // treeList: res.data.treeList || [],
               widgetList: [],
               formConfig: {
                 moduleId: `${this.formData.moduleCode}_${this.formData.functionCode}`,
+                modelCode: this.formData.modelCode,
+                functionCode:this.formData.functionCode,
+                functionName:this.formData.functionName,
               },
               module: this.formData,
             };
@@ -1535,6 +1688,15 @@ export default {
               this.formData?.functionType
             );
             this.$emit("generateData", { widgetList, formConfig });
+            let designJson = JSON.stringify(
+              { widgetList, formConfig },
+              null,
+              "  "
+            );
+            let data = Object.assign({}, this.getBaseParams(), { designJson });
+            // saveDesignJson(data).then((res) => {
+            //   messageHandler.notifySuccess("保存功能设计Json成功！");
+            // });
           }
         }
       } catch (error) {
@@ -1547,6 +1709,7 @@ export default {
 
     // 工具方法
     getBaseParams() {
+      
       return {
         moduleName: this.formData.moduleName,
         moduleCode: this.formData.moduleCode,

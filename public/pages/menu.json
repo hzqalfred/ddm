@@ -35,8 +35,8 @@
       "size": 50,
       "title": "日志管理",
       "click": "btnMenu_click",
-      "id": "LogList",
-      "code": "LogList"
+      "id": "loggingList",
+      "code": "loggingList"
     }
   ]
 }

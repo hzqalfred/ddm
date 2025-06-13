@@ -373,7 +373,7 @@ import i18n from "@/core/i18nLang";
 import axios from "axios";
 import SvgIcon from "@/core/components/SvgIcon/index.vue";
 import { getFunctionDetail } from "@/api/webDesigner";
-import functionGenerator from "./components/functionGenerator.vue";
+import functionGenerator from "@/core/components/functionGenerator.vue";
 
 export default {
   name: "FieldPanel",

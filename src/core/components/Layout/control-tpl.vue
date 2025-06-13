@@ -124,7 +124,7 @@ import suiteManageList from "@/views/idk/suiteManageList.vue";
 import suiteManage from "@/views/idk/suiteManage.vue";
 import functionPrivilege from "@/views/idk/functionPrivilege.vue"
 
-import functiongenerator from "@/views/idk/functionGenerator.vue";
+import functiongenerator from "@/core/components/functionGenerator.vue";
 const formCenterStore = useFormCenterStore();
 const props = defineProps(["data"]);
 const item = reactive(props.data);

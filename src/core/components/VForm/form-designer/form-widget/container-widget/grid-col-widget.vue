@@ -97,7 +97,7 @@ export default {
   data() {
     return {
       layoutProps: {
-        span: this.widget.options.span || 12,
+        span :Math.floor( this.widget.options.span) || 12,
         // md: this.widget.options.md || 12,
         // sm: this.widget.options.sm || 12,
         // xs: this.widget.options.xs || 12,
@@ -132,7 +132,7 @@ export default {
             this.layoutProps.span = this.widget.options.md || 12
           }
         } else {
-          this.layoutProps.span = this.widget.options.span || 12
+          this.layoutProps.span =Math.floor( this.widget.options.span) || 12
         }
       }
     },
@@ -149,7 +149,7 @@ export default {
             this.layoutProps.span = this.widget.options.md || 12
           }
         } else {
-          this.layoutProps.span = this.widget.options.span || 12
+          this.layoutProps.span =Math.floor( this.widget.options.span) || 12
         }
       }
     },
@@ -212,7 +212,7 @@ export default {
           this.layoutProps.span = this.widget.options.md || 12
         }
       } else {
-        this.layoutProps.spn = this.widget.options.span
+        this.layoutProps.spn =Math.floor( this.widget.options.span)
       }
     },
 

@@ -33,7 +33,11 @@ export const containers = [
     options: {
       name: "",
       hidden: false,
+      visble:true,
       customClass: "", //自定义css类名
+      functionCode:"",
+      moduleName:"",
+      moduleCode:"",
     },
   }, //hzq
 

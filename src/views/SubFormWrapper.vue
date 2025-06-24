@@ -31,6 +31,7 @@ const props = defineProps({
   parentData: Object,
   dataCenter: Object,
   globalDsv: Object,
+  pageProvide:Object
 });
 
 const loading = ref(true);
@@ -41,13 +42,17 @@ const subFormRef = ref(null);
 
 // 获取functionCode
 const functionCode = computed(() => props.widget?.options?.functionCode);
-const moduleName = computed(() => props.parentParam?.moduleName);
-const moduleCode = computed(() => props.parentParam?.moduleCode);
+const moduleName = computed(
+  () => props.widget?.options?.moduleName || props.parentParam?.moduleName
+);
+const moduleCode = computed(
+  () => props.widget?.options?.moduleCode || props.parentParam?.moduleCode
+);
 
 // 监听functionCode变化
 watchEffect(async () => {
   if (!functionCode.value) return;
-
+  console.log(props.pageProvide.getElement())
   try {
     loading.value = true;
     const res = await getFunctionDetail({

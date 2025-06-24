@@ -4,7 +4,7 @@
       <vxe-tabs
         v-model="activeTabName"
         :type="widget.options.tabType"
-        :ref="widget.id"
+        ref="fieldEditor"
         :class="[customClass]"
         :padding="widget.options.tabPadding"
         :height="widget.options.tabHeight"
@@ -114,7 +114,7 @@ export default {
   methods: {
     isCustomContainer(widget) {
       // 定义需要通过 container-render 插槽处理的组件类型
-      const customContainerTypes = ["subgrid", "universal"];
+      const customContainerTypes = ["subgrid", "universal","page"];
       return (
         widget.category === "container" &&
         customContainerTypes.includes(widget.type)

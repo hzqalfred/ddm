@@ -38,6 +38,7 @@
         <!-- <span class="col-span-title">{{ i18nt('designer.setting.colSpanTitle') }}{{ colIdx + 1 }}</span> -->
         <el-input-number
           v-model.number="colItem.options.span"
+          :precision="0"
           :min="1"
           :max="24"
           @change="
@@ -97,7 +98,7 @@ export default {
     },
     setColumnNums() {
       this.selectedWidget?.cols.map((x) => {
-       if(x?.options?.span)  x.options.span = 24 / this.optionModel.formColumnNums;
+       if(x?.options?.span)  x.options.span = Math.floor(24 / this.optionModel.formColumnNums) ;
       })
     },
   },

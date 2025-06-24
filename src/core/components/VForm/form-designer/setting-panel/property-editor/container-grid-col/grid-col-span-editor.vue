@@ -1,7 +1,7 @@
 <template>
   <div>
     <el-form-item :label="i18nt('designer.setting.colSpanTitle')" v-if="!optionModel.responsive">
-      <el-input-number v-model.number="optionModel.span" :min="1" :max="24"
+      <el-input-number v-model.number="optionModel.span" :min="1" :max="24"  :precision="0"
                        style="width: 100%"></el-input-number>
     </el-form-item>
     <el-form-item :label="i18nt('designer.setting.colSpanTitle') + '(PC)'"

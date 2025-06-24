@@ -95,7 +95,12 @@ const setting = [
       //   show: true,
       // },
     ],
-  },
+  },{
+    type: "subgrid",
+    options:{
+      visble:true
+    }
+  }
 ];
 
 export default setting;

@@ -38,7 +38,10 @@
         <!-- 自定义容器渲染插槽 -->
         <template #container-render="{ widget }">
           <sub-form-wrapper
-            v-if="widget.type === 'subgrid'"
+            v-if="
+              widget.type === 'subgrid' ||
+                (widget.type === 'page' && widget?.options?.visble)
+            "
             :widget="widget"
             :parent-data="formData"
             :parent-param="parantParam"

@@ -204,7 +204,7 @@ export default {
       return request;
     },
     formConfig() {
-      return this.formJsonObj.formConfig;
+      return this.formJsonObj?.formConfig;
     },
 
     widgetList() {
@@ -313,9 +313,9 @@ export default {
         if (typeof func === "function") {
           // let proto = Object.getPrototypeOf(this); //proto被锁死
           // 绑定到Vue实例原型，使所有组件都能访问
-          this[key] = function(...args){
+          this[key] = function(...args) {
             return func.apply(this, args);
-          }
+          };
         }
       });
     },
@@ -551,7 +551,7 @@ export default {
 
     handleOnMounted() {
       try {
-        this.bindGlobalFunctionsToVuePrototype()
+        this.bindGlobalFunctionsToVuePrototype();
         setTimeout(() => {
           let event =
             (this.formConfig?.eventMap &&
@@ -1142,14 +1142,14 @@ export default {
         );
       } else {
         // 如果还没有，下次 tick 再试
-        this.$nextTick(() => {
+        setTimeout(() => {
           if (componentInstance?.$refs[refsName]) {
             this._widgetMaps.idToVxeInstance.set(
               fieldId,
               componentInstance.$refs[refsName]
             );
           }
-        });
+        }, 340);
       }
     },
     // 从映射表移除

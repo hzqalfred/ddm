@@ -63,7 +63,97 @@ const generateDrawer = ({ name, label = "drawer", widgetList = [] }) => {
   });
 };
 
-const generateInput = ({ name, label }) => {
+const generateComponent = ({
+  name,
+  label,
+  cpName,
+  formatter,
+  disabled = false,
+}) => {
+  let data = null;
+  switch (cpName) {
+    case "VxeInput":
+      data = generateInput({ name, label, disabled });
+      break;
+    case "VxeSelect":
+      data = generateSelect({ name, label, formatter, disabled });
+      break;
+    case "VxeSwitch":
+      data = generateSwitch({ name, label, disabled });
+      break;
+    case "VxeDatePicker":
+      data = generateDatePicker({ name, label, disabled });
+      break;
+    case "VxeNumberInput":
+      data = generateNumberInput({ name, label, disabled });
+      break;
+    default:
+      data = generateInput({ name, label, disabled });
+      break;
+  }
+  return data;
+};
+
+const generateSwitch = ({ name, label, disabled }) => {
+  let id = generateRandomId();
+  let vxeswitch = basicFields.find((x) => x.type == "switch");
+  return _.merge({}, vxeswitch, {
+    key: name || "switch" + id,
+    options: {
+      name: name || "switch" + id,
+      label,
+      disabled,
+    },
+    id: name || "switch" + id,
+  });
+};
+
+const generateDatePicker = ({ name, label, disabled }) => {
+  let id = generateRandomId();
+  let date = basicFields.find((x) => x.type == "date");
+  return _.merge({}, date, {
+    key: name || "date" + id,
+    options: {
+      name: name || "date" + id,
+      label,
+      disabled,
+    },
+    id: name || "date" + id,
+  });
+};
+
+const generateNumberInput = ({ name, label, disabled }) => {
+  let id = generateRandomId();
+  let vxenumber = basicFields.find((x) => x.type == "number");
+
+  return _.merge({}, vxenumber, {
+    key: name || "number" + id,
+    options: {
+      name: name || "number" + id,
+      label,
+      disabled,
+    },
+    id: name || "number" + id,
+  });
+};
+
+const generateSelect = ({ name, label, formatter = "", disabled }) => {
+  let id = generateRandomId();
+  let select = basicFields.find((x) => x.type == "select");
+
+  return _.merge({}, select, {
+    key: name || "select" + id,
+    options: {
+      name: name || "select" + id,
+      dictionary: formatter,
+      label,
+      disabled,
+    },
+    id: name || "select" + id,
+  });
+};
+
+const generateInput = ({ name, label, disabled }) => {
   let id = generateRandomId();
   let input = basicFields.find((x) => x.type == "input");
 
@@ -72,6 +162,7 @@ const generateInput = ({ name, label }) => {
     options: {
       name: name || "input" + id,
       label,
+      disabled,
     },
     id: name || "input" + id,
   });
@@ -385,6 +476,7 @@ function generateButtonContainer({ methodList, belongTo, type, drawer }) {
           globalObject,
           processObject({
             [`${method.methodCode}.onClick`]: `function() {
+            this.refList.${drawer}.selRow = this.refList.${belongTo}.getDefaultValue()
          ${"let params = {isAdd:true, signName: '" + drawer + "' }"}
     this.comUtils.addFormData(params);
   }`,
@@ -513,9 +605,9 @@ function generateTableColumns(columnList) {
         editable: !!column.modifyEdit,
         visible: !!column.gridColumn,
         align: column.align,
-        editRenderName: column.componentName || getEditRender(column), // 添加编辑渲染器
+        formatter: column.formatter,
+        editRenderName: column.componentName, // 添加编辑渲染器
       };
-
       return columnConfig;
     });
 }
@@ -670,7 +762,15 @@ export function generateGridData(inputData, flag) {
     .map((x) => {
       return generateGridColumn(
         generateRandomId(),
-        [generateInput({ label: x.columnName, name: x.columnCode })],
+        [
+          generateComponent({
+            label: x.columnName,
+            name: x.columnCode,
+            cpName: x.componentName,
+            formatter: x.formatter,
+            disabled: !x.modifyEdit,
+          }),
+        ],
         24 / baseInfo.formColumnNums
       );
     });
@@ -734,7 +834,15 @@ export function generateFormData(inputData) {
     .map((x) => {
       return generateGridColumn(
         generateRandomId(),
-        [generateInput({ label: x.columnName, name: x.columnCode })],
+        [
+          generateComponent({
+            label: x.columnName,
+            name: x.columnCode,
+            cpName: x.componentName,
+            formatter: x.formatter,
+            disabled: !x.modifyEdit,
+          }),
+        ],
         24 / baseInfo.formColumnNums
       );
     });
@@ -829,7 +937,15 @@ export function generateTreeGridFormData(inputData) {
     .map((x) => {
       return generateGridColumn(
         generateRandomId(),
-        [generateInput({ label: x.columnName, name: x.columnCode })],
+        [
+          generateComponent({
+            label: x.columnName,
+            name: x.columnCode,
+            cpName: x.componentName,
+            formatter: x.formatter,
+            disabled: !x.modifyEdit,
+          }),
+        ],
         24 / baseInfo.formColumnNums
       );
     });
@@ -900,7 +1016,11 @@ export function generateTreeGridFormData(inputData) {
 }
 
 export default function main(inputData, type = "grid") {
-  globalObject = {};
+  globalObject = processObject({
+    [`setGlobalDsv`]: `function(dsv) {
+  // dsv.userinfo = {"name":"admin"}   格式化可直接填写 userinfo 
+  }`,
+  });
   eventMap = {};
   if (type === "form") return generateFormData(inputData);
   if (type === "grid") return generateGridData(inputData);

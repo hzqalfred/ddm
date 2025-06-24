@@ -190,6 +190,7 @@ export default {
       getDesignerConfig: () => this.designerConfig,
       getBannedWidgets: () => this.bannedWidgets,
       getDataCenter: () => this.dataCenter,
+      getDictionary_dsv: () => ({}),
     };
   },
   computed: {

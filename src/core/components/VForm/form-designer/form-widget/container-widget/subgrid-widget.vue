@@ -7,7 +7,7 @@
     :index-of-parent-list="indexOfParentList"
   >
     <div style="min-height:200px" @click.stop="selectWidget(widget)">
-      <div v-if="designState">
+      <div>
         <div class="demo_title">
           {{ widget.options.label + "(" + widget.options.name + ")" }}
         </div>

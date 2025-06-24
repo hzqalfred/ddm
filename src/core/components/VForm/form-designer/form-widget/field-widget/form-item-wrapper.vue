@@ -28,10 +28,12 @@
       @click.stop="selectField(field)"
     >
       <template #label>
-        <span @click="clickFormLabel(field.options)">{{ label }}</span>
+        <div class="label-wrapper">
+          <span @click="clickFormLabel(field.options)">{{ label }}</span>
+        </div>
 
         <span v-if="field.options.inputHelp">
-          <el-tooltip
+          <!-- <el-tooltip
             popper-class="help-item"
             raw-content
             :content="field.options.inputHelp"
@@ -40,7 +42,7 @@
             effect="customized"
           >
             <el-icon style="color:red"><Warning /></el-icon>
-          </el-tooltip>
+          </el-tooltip> -->
         </span>
       </template>
 
@@ -150,7 +152,7 @@ export default {
           message: "该字段为必填字段!",
         });
       }
-      rules = [ ...this.rules,...rules];
+      rules = [ ...this.rules];
       
       return rules;
     },
@@ -408,6 +410,14 @@ export default {
   text-align: right;
   justify-content: flex-end !important;
 }
+
+.label-wrapper {
+  width: 100%; 
+  text-align: left; 
+  padding-left: 20%; 
+  font-weight: bold !important;
+}
+
 </style>
 
 <style>

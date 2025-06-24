@@ -11,7 +11,11 @@
     }"
   >
     <template v-for="(subWidget, swIdx) in widget.widgetList">
-      <template v-if="'container' === subWidget.category">
+      <!-- 🔥 新增：优先检查是否是需要自定义渲染的容器组件 -->
+          <template v-if="isCustomContainer(subWidget)">
+            <slot name="container-render" :widget="subWidget"></slot>
+          </template>
+      <template v-else-if="'container' === subWidget.category">
         <component :is="getComponentByContainer(subWidget)" :widget="subWidget" :key="swIdx" :parent-list="widget.widgetList" :index-of-parent-list="swIdx" :parent-widget="widget">
           <!-- 递归传递插槽！！！ -->
           <template v-for="slot in Object.keys($slots)" v-slot:[slot]="scope">
@@ -67,7 +71,16 @@ export default {
     /* tableCell不生成组件引用，故无须调用initRefList！！ */
     //this.initRefList()
   },
-  methods: {}
+  methods: {
+     isCustomContainer(widget) {
+      // 定义需要通过 container-render 插槽处理的组件类型
+      const customContainerTypes = ["subgrid", "universal"];
+      return (
+        widget.category === "container" &&
+        customContainerTypes.includes(widget.type)
+      );
+    },
+  }
 }
 </script>
 

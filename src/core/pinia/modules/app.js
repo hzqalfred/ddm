@@ -3,7 +3,7 @@ import { defineStore } from "pinia";
 export const useApp = defineStore("app", {
   state: () => ({
     buttonLoading: [],
-    layout: "wins",
+    layout: "default",
     // 修复默认布局配置
     layoutConfig: {
       showBanner: true,

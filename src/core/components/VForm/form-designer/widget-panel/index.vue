@@ -437,6 +437,7 @@ export default {
     },
 
     showFormTemplates() {
+      return false;
       if (this.designerConfig["formTemplates"] === undefined) {
         return true;
       }
@@ -534,9 +535,172 @@ export default {
     onContainerDragEnd(evt) {
       //
     },
+    // 深度查找并替换组件的递归函数
+    deepReplaceWidget(widgetList, targetKey, newWidget) {
+      if (!Array.isArray(widgetList)) {
+        return false;
+      }
+      for (let i = 0; i < widgetList.length; i++) {
+        const widget = widgetList[i];
+        // 如果找到了目标组件，直接替换
+        if (widget.key === targetKey) {
+          widgetList[i] = newWidget;
+          return true;
+        }
+        // 递归查找子组件
+        let found = false;
+        // 检查 widgetList 属性
+        if (widget.widgetList && Array.isArray(widget.widgetList)) {
+          found = this.deepReplaceWidget(
+            widget.widgetList,
+            targetKey,
+            newWidget
+          );
+          if (found) return true;
+        }
+        // 检查 cols 属性（适用于 grid 组件）
+        if (widget.cols && Array.isArray(widget.cols)) {
+          for (const col of widget.cols) {
+            if (col.widgetList && Array.isArray(col.widgetList)) {
+              found = this.deepReplaceWidget(
+                col.widgetList,
+                targetKey,
+                newWidget
+              );
+              if (found) return true;
+            }
+          }
+        }
+        // 检查其他可能包含子组件的属性
+        if (widget.children && Array.isArray(widget.children)) {
+          found = this.deepReplaceWidget(widget.children, targetKey, newWidget);
+          if (found) return true;
+        }
+      }
+      return false;
+    },
+    collectAllIds(widgetList) {
+      const ids = new Set();
+
+      const traverse = (widgets) => {
+        if (!Array.isArray(widgets)) return;
+
+        widgets.forEach((widget) => {
+          // 收集当前widget的id
+          if (widget.id) {
+            ids.add(widget.id);
+          }
+          if (widget.key) {
+            ids.add(widget.key);
+          }
+
+          // 递归遍历子组件
+          if (widget.widgetList && Array.isArray(widget.widgetList)) {
+            traverse(widget.widgetList);
+          }
+
+          // 处理grid组件的cols
+          if (widget.cols && Array.isArray(widget.cols)) {
+            widget.cols.forEach((col) => {
+              if (col.id) ids.add(col.id);
+              if (col.key) ids.add(col.key);
+              if (col.widgetList) {
+                traverse(col.widgetList);
+              }
+            });
+          }
+
+          // 处理其他可能包含子组件的属性
+          if (widget.children && Array.isArray(widget.children)) {
+            traverse(widget.children);
+          }
+        });
+      };
+
+      traverse(widgetList);
+      return ids;
+    },
+    resolveIdConflicts(copy, existingIds, functionCode) {
+      const processedIds = new Set(existingIds);
+
+      const traverse = (widgets) => {
+        if (!Array.isArray(widgets)) return;
+
+        widgets.forEach((widget) => {
+          // 处理widget的id冲突
+          if (widget.id && processedIds.has(widget.id)) {
+            let newId = widget.id + "_" + functionCode;
+            widget.id = newId;
+            processedIds.add(newId);
+          } else if (widget.id) {
+            processedIds.add(widget.id);
+          }
+
+          // 处理widget的key冲突（如果需要的话）
+          if (widget.key && processedIds.has(widget.key)) {
+            let newKey = widget.key + "_" + functionCode;
+            if (widget?.options?.name == widget.key) widget.options.name = newKey;
+            widget.key = newKey;
+            processedIds.add(newKey);
+          } else if (widget.key) {
+            processedIds.add(widget.key);
+          }
+
+          // 递归处理子组件
+          if (widget.widgetList && Array.isArray(widget.widgetList)) {
+            traverse(widget.widgetList);
+          }
+
+          // 处理grid组件的cols
+          if (widget.cols && Array.isArray(widget.cols)) {
+            widget.cols.forEach((col) => {
+              // 处理col的id冲突
+              if (col.id && processedIds.has(col.id)) {
+                let newId = col.id + "_" + functionCode;
+                col.id = newId;
+                processedIds.add(newId);
+              } else if (col.id) {
+                processedIds.add(col.id);
+              }
+
+              // 处理col的key冲突
+              if (col.key && processedIds.has(col.key)) {
+                let newKey = col.key + "_" + functionCode;
+                if (col?.options?.name == col.key) col.options.name = newKey;
+                col.key = newKey;
+                processedIds.add(newKey);
+              } else if (col.key) {
+                processedIds.add(col.key);
+              }
+
+              if (col.widgetList) {
+                traverse(col.widgetList);
+              }
+            });
+          }
+
+          // 处理其他可能包含子组件的属性
+          if (widget.children && Array.isArray(widget.children)) {
+            traverse(widget.children);
+          }
+        });
+      };
+
+      // 如果copy有widgetList，处理它
+      if (copy.widgetList && Array.isArray(copy.widgetList)) {
+        traverse(copy.widgetList);
+      }
+
+      // 如果copy本身就是一个widget数组，直接处理
+      if (Array.isArray(copy)) {
+        traverse(copy);
+      }
+    },
     async onSubgridDragEnd() {
+      return
       let origin = this.originMoveFields;
       let module = this.globalDsv?.param;
+      
       try {
         // 拖拽子组件请求json显示 3.24
         if (origin?.type == "subgrid") {
@@ -554,12 +718,36 @@ export default {
             widgetList: obj.widgetList,
           });
           let copy = this.designer.copyNewContainerWidget(pageContain);
-          let index = this.designer.widgetList.findIndex(
-            (x) => x.key == origin.key
+          console.log("origin", JSON.stringify(origin));
+          console.log("copy", JSON.stringify(copy));
+          console.log(
+            "desinger.widgetList",
+            JSON.stringify(this.designer.widgetList)
           );
-          this.designer.widgetList.splice(index, 1, copy);
+          // 收集现有的所有id
+          const existingIds = this.collectAllIds(this.designer.widgetList);
+
+          // 解决copy中的id冲突
+          this.resolveIdConflicts(
+            copy,
+            existingIds,
+            origin?.options?.functionCode
+          );
+          const replaced = this.deepReplaceWidget(
+            this.designer.widgetList,
+            origin.key,
+            copy
+          );
+
+          if (!replaced) {
+            console.warn("未找到要替换的组件:", origin.key);
+          } else {
+            console.log("组件替换成功");
+          }
         }
-      } catch (error) {}
+      } catch (error) {
+        console.log(error);
+      }
     },
 
     addContainerByDbClick(container) {
@@ -574,7 +762,6 @@ export default {
       this.showGuide = false;
     },
     loadFormTemplate(type) {
-      
       this.loadType = type;
       this.showGuide = true;
     },

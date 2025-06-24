@@ -15,7 +15,7 @@
           "ele": "header",
           "id": "app_banner",
           "class": "portal_head",
-          "style": "display: flex; height: 60px; background-color: #336699; color: #ffffff;",
+          "style": "display: flex; height: 60px; background-color: #267AFF; color: #ffffff; padding: 0px",
           "data": [
             {
               "type": "layout",
@@ -28,15 +28,151 @@
                   "type": "layout",
                   "ele": "col",
                   "id": "banner_logo_col",
-                  "span": 8,
+                  "span": 2,
+                  "style": "margin-right: 20px",
                   "data": [
                     {
                       "type": "control",
                       "ele": "span",
                       "id": "app_title",
-                      "value": "CPII-RUNTIME",
-                      "style": "font-size: 18px; font-weight: bold; color: white; cursor: pointer;",
+                      "value": "LOGO",
+                      "style": "font-size: 53px; font-weight: bold; color: white; cursor: pointer;line-height: 53px",
                       "click": "navigateToHome"
+                    }
+                  ]
+                },
+                {
+                  "type": "layout",
+                  "ele": "col",
+                  "id": "banner_logo_col",
+                  "span": 15,
+                  "data": [
+                    {
+                      "type": "layout",
+                      "ele": "row",
+                      "id": "banner_logo_col",
+                      "data": [
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 1,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "btngroup",
+                              "id": "banner_buttons",
+                              "data": [
+                                {
+                                  "type": "text",
+                                  "id": "btn_menu_toggle",
+                                  "icon": "Operation",
+                                  "click": "toggleMenuDrawer",
+                                  "style": "font-size: 20px;color: white;cursor: pointer",
+                                  "value": ""
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 1,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "首页",
+                              "style": "font-size: 18px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ],
+                          "style": "margin-right:15px"
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 2,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "我的门户",
+                              "style": "font-size: 18px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 2,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "工作通知",
+                              "style": "font-size: 18px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 2,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "我的审批",
+                              "style": "font-size: 18px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 2,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "我的任务",
+                              "style": "font-size: 18px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 2,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "我的日程",
+                              "style": "font-size: 18px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ]
+                        }
+                      ]
                     }
                   ]
                 },
@@ -57,7 +193,7 @@
                           "id": "btn_menu_toggle",
                           "icon": "Menu",
                           "click": "toggleMenuDrawer",
-                          "style": "margin-right:20px",
+                          "style": "margin-right:20px; font-size: 25px; color: white; cursor: pointer",
                           "value": ""
                         },
                         {
@@ -65,15 +201,90 @@
                           "id": "btn_settings",
                           "icon": "Setting",
                           "click": "toggleLayoutSettings",
-                          "style": "margin-right:20px",
+                          "style": "margin-right:20px; font-size: 25px; color: white; cursor: pointer",
                           "value": ""
                         },
                         {
                           "type": "text",
-                          "id": "btn_logout",
+                          "id": "btn_settings",
                           "icon": "SwitchButton",
                           "click": "handleLogout",
+                          "style": "font-size: 25px; color: white; cursor: pointer",
                           "value": ""
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "layout",
+                  "ele": "col",
+                  "id": "banner_logo_col",
+                  "span": 2,
+                  "style": "background: linear-gradient(to right, rgba(255, 255, 255, 0.4), #267AFF); height: 60px; display: flex; justify-content: center; align-items: center; cursor: pointer;border-top-left-radius: 200px;border-bottom-left-radius: 200px;",
+                  "data": [
+                    {
+                      "type": "layout",
+                      "ele": "row",
+                      "id": "banner_logo_col",
+                      "justify": "flex-start",
+                      "style": "width: 100%; padding-left: 12px; align-items: center;",
+                      "data": [
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 10,
+                          "data": [
+                            {
+                              "type": "layout",
+                              "ele": "col",
+                              "id": "banner_logo_col",
+                              "span": 24,
+                              "style": "background-color: white; border-radius: 50%; width: 45px; height: 45px; display: flex; justify-content: center; align-items: center; cursor: pointer;",
+                              "data": [
+                                {
+                                  "type": "control",
+                                  "ele": "btngroup",
+                                  "id": "banner_buttons",
+                                  "data": [
+                                    {
+                                      "type": "text",
+                                      "id": "btn_menu_toggle",
+                                      "icon": "UserFilled",
+                                      "click": "toggleMenuDrawer",
+                                      "style": "font-size: 30px;color: #267aff;cursor: pointer",
+                                      "value": ""
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "layout",
+                          "ele": "col",
+                          "id": "banner_logo_col",
+                          "span": 14,
+                          "data": [
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "管理员",
+                              "style": "font-size: 16px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            },
+                            {
+                              "type": "control",
+                              "ele": "span",
+                              "id": "app_title",
+                              "value": "管理员名称",
+                              "style": "font-size: 14px; color: white; cursor: pointer;",
+                              "click": "navigateToHome"
+                            }
+                          ]
                         }
                       ]
                     }
@@ -116,7 +327,7 @@
                 {
                   "type": "frame",
                   "ele": "main",
-                  "style": "padding-top: 0px",
+                  "style": "padding: 0px",
                   "id": "content-layout",
                   "data": [
                     {

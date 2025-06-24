@@ -51,7 +51,9 @@ export let deleteOtherSetting = (data) => {
 export let saveDesignJson = (data) => {
   return request.postData("/design/manage/function/saveDesignJson", data);
 };
-
+export let splitFunction = (data) => {
+  return request.postData("/design/manage/function/split",data);
+}
 export let allDataService = () => {
   return request.postData("/design/manage/module/allDataService");
 };

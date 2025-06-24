@@ -5,23 +5,24 @@
     :sub-form-col-index="subFormColIndex" :sub-form-row-id="subFormRowId">
 
     <div :style="{display: 'flex', justifyContent: field.options.float}">
-      <vxe-button 
-        ref="fieldEditor"
-        :mode="field.options.mode" 
-        :size="field.options.comsize"
-        :content="field.options.content" 
-        :status="field.options.status" 
-        :round="field.options.round"
-        :circle="field.options.circle" 
-        :icon="field.options.icon"
-        :prefix-tooltip="field.options.prefixTooltip ? { content: field.options.prefixTooltip } : ''"
-        :suffix-tooltip="field.options.suffixTooltip ? { content: field.options.suffixTooltip } : ''"
-        :loading="field.options.loading" 
-        :disabled="field.options.comdisabled" 
-        :hidden="field.options.hidden"
-        v-debounce="handleButtonWidgetClick">
-        {{ field.options.title ||  field.options.label}}      
-      </vxe-button>
+        <vxe-button 
+          ref="fieldEditor"
+          :mode="field.options.mode" 
+          :size="field.options.comsize"
+          :content="field.options.content" 
+          :status="['error', 'info'].includes(field.options.status) ? null : field.options.status" 
+          :round="field.options.round"
+          :circle="field.options.circle" 
+          :icon="field.options.icon"
+          :prefix-tooltip="field.options.prefixTooltip ? { content: field.options.prefixTooltip } : ''"
+          :suffix-tooltip="field.options.suffixTooltip ? { content: field.options.suffixTooltip } : ''"
+          :loading="field.options.loading" 
+          :disabled="field.options.comdisabled" 
+          :hidden="field.options.hidden"
+          :style="buttonStyle(field.options.status)"
+          v-debounce="handleButtonWidgetClick">
+          {{ field.options.title ||  field.options.label}}      
+        </vxe-button>
     </div>
     
   </static-content-wrapper>
@@ -68,7 +69,22 @@ export default {
   components: {
     StaticContentWrapper
   },
-  computed: {},
+  computed: {
+    buttonStyle() {
+      return function (status) {
+        let _style = 'min-width: 80px; height: 30px; font-weight: bold;'
+        switch (status) {
+          case 'error':
+            _style += 'color: #F64C4C; border-color: #F64C4C;'
+            break
+          case 'info':
+            _style += 'color: #267AFF; border-color: #267AFF;'
+            break
+        }
+        return _style
+      }
+    }
+  },
   beforeCreate() {
     /* 这里不能访问方法和属性！！ */
   },

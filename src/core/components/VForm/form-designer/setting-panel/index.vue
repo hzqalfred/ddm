@@ -563,7 +563,7 @@ export default {
     },
     showGlobalFunctionObject(key) {
       this.$refs.formSetting.editGlobalFunctionsObject(
-        `${this.selectedWidget?.id}.${key}`
+        `${this.selectedWidget?.options?.name}.${key}`,`${this.selectedWidget?.id}.${key}`
       );
     },
     setEventFunc(key, val) {
@@ -738,7 +738,7 @@ export default {
       let data = Object.assign({}, this.globalDsv.param, {
         modelCode: this.modelCode,
       });
-      if(data.modelSql) delete data.modelSql
+      if (data.modelSql) delete data.modelSql;
       console.log(data);
       parseModelSql(data).then((res) => {
         if (res.code !== "200") {

@@ -9,6 +9,7 @@
       v-model="dialogVisible"
       title="校验规则配置编辑器"
       width="90%"
+     
       :before-close="handleClose"
       append-to-body
       destroy-on-close
@@ -28,6 +29,7 @@
           ref="xTable"
           border
           resizable
+          height="400px"
           show-overflow
           :data="columnData"
           :edit-config="{ trigger: 'click', mode: 'cell' }"
@@ -643,7 +645,6 @@ export default {
 
     // 编辑自定义校验函数
     const editValidatorFn = (row) => {
-      
       currentRow.value = row;
       currentValidatorFn.value =
         row.validatorFn ||
@@ -653,7 +654,6 @@ export default {
 
     // 保存自定义校验函数
     const saveValidatorFn = () => {
-      
       if (currentRow.value) {
         currentRow.value.validatorFn = new Function(
           `return (${currentValidatorFn.value})`

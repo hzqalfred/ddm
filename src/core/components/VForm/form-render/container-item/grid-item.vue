@@ -1,6 +1,6 @@
 <template>
   <container-item-wrapper :widget="widget">
-    <el-row :key="widget.id" :gutter="widget.options.gutter" class="grid-container" :class="[customClass]" :ref="widget.id" v-show="!widget.options.hidden" style="position: relative;">
+    <el-row :key="widget.id" :gutter="widget.options.gutter" class="grid-container" :class="[customClass]" :ref="widget.id" v-show="!widget.options.hidden" style="position: relative;padding-top: 0px;">
       <template v-for="(colWidget, colIdx) in widget.cols" :key="colIdx">
         <grid-col-item :widget="colWidget" :parent-list="widget.cols" :index-of-parent-list="colIdx" :parent-widget="widget" :col-height="widget.options.colHeight">
           <!-- 递归传递插槽！！！ -->

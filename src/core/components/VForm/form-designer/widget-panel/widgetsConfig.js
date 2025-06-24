@@ -687,7 +687,7 @@ export const basicFields = [
       remote: false,
       multiple: false,
       multipleLimit: 0,
-      sourceType: "dictionary",
+      sourceType: "custom",
       dictionary: "",
       optionItems: [
         // { label: 'select 1', value: 1 },

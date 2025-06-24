@@ -17,12 +17,12 @@
     <!-- 主表单区域 -->
     <div
       :style="{
-        padding: loginFlag ? '0' : '20px',
+        padding: '0',
         width: treeList.length
           ? '80%'
           : loginFlag
           ? '100%'
-          : 'calc(100% - 40px)',
+          : 'calc(100% - 15px)',
       }"
     >
       <!-- 主表单渲染 -->
@@ -85,8 +85,6 @@ const loginFlag = computed(
 );
 
 onMounted(async () => {
-  
-
   // 目前唯运行端 originData.id是由moduleName-moduleCode-functionCode组成
   if (originData?.id && originData?.id?.split("-")?.length == 3) {
     let [moduleName, moduleCode, functionCode] = originData?.id?.split("-");
@@ -142,8 +140,10 @@ const loadMainForm = async (functionCode) => {
         { affectParent: true }
       );
     }
+    let functionDetails = Object.assign({}, mainRes?.data);
     globalDsv.param = Object.assign({}, mainRes.data, globalDsv.param, {
       formJson: mainFormJson.value,
+      ...functionDetails,
     });
     console.log(mainFormJson.value);
     let fcobj = mainFormJson.value.formConfig.globalObject;
@@ -165,7 +165,6 @@ const getList = (param) => {
 };
 // 添加到 handleNodeClick 方法中
 const handleNodeClick = async ({ node }) => {
-  
   mainFormJson.value = "";
   await loadMainForm(node.functionCode);
   dataCenter.reinitialize();

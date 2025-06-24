@@ -4,11 +4,18 @@
       ref="fieldEditor"
       v-model="drawerVisible"
       @show="handleOnShow"
-
       :size="widget.options.comsize"
       :position="widget.options.position || 'right'"
-      :width="['left', 'right'].includes(widget.options.position || 'right') ? (widget.options.width || '40%') : null"
-      :height="['top', 'bottom'].includes(widget.options.position || 'right') ? (widget.options.height || '40%') : null"
+      :width="
+        ['left', 'right'].includes(widget.options.position || 'right')
+          ? widget.options.width || '40%'
+          : null
+      "
+      :height="
+        ['top', 'bottom'].includes(widget.options.position || 'right')
+          ? widget.options.height || '40%'
+          : null
+      "
       :padding="widget.options.padding"
       :mask-closable="widget.options.maskClosable"
       :title="widget.options.title"
@@ -21,7 +28,11 @@
         v-show="!widget.options.hidden"
       >
         <template v-for="(subWidget, swIdx) in widget.widgetList">
-          <template v-if="'container' === subWidget.category">
+          <!-- 🔥 新增：优先检查是否是需要自定义渲染的容器组件 -->
+          <template v-if="isCustomContainer(subWidget)">
+            <slot name="container-render" :widget="subWidget"></slot>
+          </template>
+          <template v-else-if="'container' === subWidget.category">
             <component
               :is="getComponentByContainer(subWidget)"
               :widget="subWidget"
@@ -128,6 +139,14 @@ export default {
     this.unregisterFromRefList();
   },
   methods: {
+    isCustomContainer(widget) {
+      // 定义需要通过 container-render 插槽处理的组件类型
+      const customContainerTypes = ["subgrid", "universal"];
+      return (
+        widget.category === "container" &&
+        customContainerTypes.includes(widget.type)
+      );
+    },
     handleShow() {
       this.dialogVisible = true;
     },

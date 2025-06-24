@@ -817,7 +817,8 @@ export const loginFormJson = {
   // 获取表单数据
   try {
     let username = typeof this.formModel.username == 'string' ? this.formModel.username : this.formModel.username?.value || '';
-    let password = this.formModel.password;
+    let password = typeof this.formModel.password == 'string' ? this.formModel.password : this.formModel.password?.value || '';
+    
     // 表单验证
     if (!username) {
       this.Message.notifyError('请输入账号');

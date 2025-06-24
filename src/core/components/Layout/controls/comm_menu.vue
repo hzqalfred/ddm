@@ -3,18 +3,22 @@
     <!-- 左侧一级菜单 -->
     <div class="primary-menu">
       <div
-        v-for="item in menuItems"
+        v-for="(item, index) in menuItems"
         :key="item.name"
         class="primary-menu-item"
         :class="{
           'is-active': activeMenuId === item.name || isParentActive(item),
+          'is-above-active': isAboveActive(index),
+          'is-below-active': isBelowActive(index),
         }"
         @click="handlePrimaryMenuClick(item)"
       >
-        <div v-if="item.icon" class="menu-icon">
-          <svg-icon size="20px" :iconClass="item.icon || 'menu'" />
+        <div class="primary-menu-item-bg">
+          <div v-if="item.icon" class="menu-icon">
+            <svg-icon size="20px" :iconClass="item.icon || 'menu'" />
+          </div>
+          <div class="menu-title">{{ item.title }}</div>
         </div>
-        <div class="menu-title">{{ item.title }}</div>
       </div>
     </div>
 
@@ -100,6 +104,32 @@ const isParentActive = (item) => {
     }
     return false;
   });
+};
+
+// 新增：判断是否为激活菜单上方的菜单项
+const isAboveActive = (currentIndex) => {
+  // 找到当前激活菜单项的索引
+  const activeIndex = menuItems.value.findIndex(
+    (item) => activeMenuId.value === item.name || isParentActive(item)
+  );
+
+  if (activeIndex === -1) return false;
+
+  // 判断是否为上一个菜单项
+  return currentIndex === activeIndex - 1;
+};
+
+// 新增：判断是否为激活菜单下方的菜单项
+const isBelowActive = (currentIndex) => {
+  // 找到当前激活菜单项的索引
+  const activeIndex = menuItems.value.findIndex(
+    (item) => activeMenuId.value === item.name || isParentActive(item)
+  );
+
+  if (activeIndex === -1) return false;
+
+  // 判断是否为下一个菜单项
+  return currentIndex === activeIndex + 1;
 };
 
 // 递归转换菜单数据结构
@@ -277,11 +307,11 @@ const createWindow = (menuItem) => {
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 12px 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  border-bottom: 1px solid #e9ecef;
   text-align: center;
+  justify-content: center;
+  min-height: 80px;
 
   &:hover {
     background: #e9ecef;
@@ -300,6 +330,36 @@ const createWindow = (menuItem) => {
     .menu-title {
       color: #007bff;
     }
+  }
+
+  /* 新增：上方菜单项的黄色样式 */
+  &.is-above-active {
+    border-bottom-right-radius: 20%;
+
+    &:hover {
+      background: #fff3cd;
+    }
+  }
+
+  /* 新增：下方菜单项的红色样式 */
+  &.is-below-active {
+    border-top-right-radius: 20%;
+    background: white;
+
+    .primary-menu-item-bg {
+      background-color: #f2f2f2;
+    }
+  }
+
+  .primary-menu-item-bg {
+    // background-color: white;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    height: 100%;
+    width: 100%;
+    min-height: 80px;
   }
 
   .menu-icon {

@@ -161,7 +161,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:",error);
       }
     },
   },

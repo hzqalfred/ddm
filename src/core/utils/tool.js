@@ -208,7 +208,6 @@ function findCircular(obj, seen = new Set()) {
     seen.add(obj);
     for (const key in obj) {
       if (findCircular(obj[key], seen)) {
-        console.log("循环引用路径:", key);
         return key;
       }
     }
@@ -250,13 +249,21 @@ export const deepClone = function(origin) {
 export const parseEnhance = function(origin) {
   return JSON.parse(origin, (key, value) => {
     if (typeof value === "string") {
-      // 检查是否是箭头函数
-      if (value.startsWith("() =>")) {
-        return new Function("return " + value)(); // 使用 Function 构造器恢复箭头函数
-      }
-      // 检查是否是普通函数
-      if (value.startsWith("function")) {
-        return new Function("return " + value)(); // 使用 Function 构造器恢复普通函数
+      // 精确匹配箭头函数 "() => {...}" 或 "() => expression"
+      const isArrowFunction = /^\(\s*\)\s*=>/.test(value);
+
+      // 精确匹配普通函数 "function (...) {...}"
+      const isNormalFunction = /^function\s*\([\w\s,]*\)\s*\{[\s\S]*\}$/.test(
+        value
+      );
+
+      if (isArrowFunction || isNormalFunction) {
+        try {
+          return new Function("return " + value)();
+        } catch (err) {
+          // 捕捉解析错误，返回原始字符串
+          return value;
+        }
       }
     }
     return value;

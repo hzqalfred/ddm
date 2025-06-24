@@ -8,6 +8,7 @@
     <el-dialog
       v-model="dialogVisible"
       title="查询条件编辑器"
+     
       width="90%"
       :before-close="handleClose"
       append-to-body
@@ -25,6 +26,7 @@
           border
           resizable
           show-overflow
+          height="400px"
           :data="queryItems"
           :edit-config="{ trigger: 'click', mode: 'cell' }"
           @cell-click="handleCellClick"
@@ -136,6 +138,7 @@
     <el-dialog
       v-model="optionsDialogVisible"
       title="编辑选项"
+     
       width="600px"
       append-to-body
     >
@@ -433,7 +436,7 @@ export default {
     // 保存查询条件
     const saveQueryItems = () => {
       // 验证必填项
-      const itemsToSave = queryItems.value
+      const itemsToSave = queryItems.value;
       const invalid = itemsToSave.some(
         (item) => !item.searchColumn || !item.label
       );

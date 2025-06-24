@@ -12,6 +12,7 @@
     :sub-form-row-id="subFormRowId"
   >
     <el-pagination
+      ref="fieldEditor"
       v-model:page-size="field.options.pageList"
       :style="{ float: field.options.pageAlign == 'left' ? 'left' : 'right' }"
       :page-sizes="(field.options.pageUnit && field.options.pageUnit.split(',')) || [10, 20, 30, 50, 100, 1000]"

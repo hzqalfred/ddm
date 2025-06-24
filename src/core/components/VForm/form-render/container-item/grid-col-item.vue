@@ -1,8 +1,19 @@
 <template>
-  <el-col class="grid-cell" :class="!widget.options.hidden ? [customClass] : []" v-bind="layoutProps" :style="colHeightStyle" :key="widget.id" v-show="!widget.options.hidden">
+  <el-col
+    class="grid-cell"
+    :class="!widget.options.hidden ? [customClass] : []"
+    v-bind="layoutProps"
+    :style="colHeightStyle"
+    :key="widget.id"
+    v-show="!widget.options.hidden"
+  >
     <template v-if="!!widget.widgetList && widget.widgetList.length > 0">
       <template v-for="(subWidget, swIdx) in widget.widgetList">
-        <template v-if="'container' === subWidget.category">
+        <!-- 🔥 新增：优先检查是否是需要自定义渲染的容器组件 -->
+        <template v-if="isCustomContainer(subWidget)">
+          <slot name="container-render" :widget="subWidget"></slot>
+        </template>
+        <template v-else-if="'container' === subWidget.category">
           <component
             :is="getComponentByContainer(subWidget)"
             :widget="subWidget"
@@ -20,7 +31,9 @@
         <template v-else>
           <!-- {{ subWidget.options.name }} -->
           <component
-            :is="(getFormType == 'print' ? 'print' : subWidget.type) + '-widget'"
+            :is="
+              (getFormType == 'print' ? 'print' : subWidget.type) + '-widget'
+            "
             :field="getSubWidget(subWidget)"
             :designer="null"
             :key="swIdx"
@@ -39,7 +52,9 @@
     <template v-else>
       <el-col>
         <div class="blank-cell">
-          <span class="invisible-content">{{ i18nt('render.hint.blankCellContent') }}</span>
+          <span class="invisible-content">{{
+            i18nt("render.hint.blankCellContent")
+          }}</span>
         </div>
       </el-col>
     </template>
@@ -47,17 +62,17 @@
 </template>
 
 <script>
-import emitter from '@/core/components/VForm/lib/emitter'
-import i18n from '@/core/i18nLang'
-import refMixin from '../refMixin'
-import FieldComponents from '@/core/components/VForm/form-designer/form-widget/field-widget/index'
+import emitter from "@/core/components/VForm/lib/emitter";
+import i18n from "@/core/i18nLang";
+import refMixin from "../refMixin";
+import FieldComponents from "@/core/components/VForm/form-designer/form-widget/field-widget/index";
 
 export default {
-  name: 'GridColItem',
-  componentName: 'ContainerItem',
+  name: "GridColItem",
+  componentName: "ContainerItem",
   mixins: [emitter, i18n, refMixin],
   components: {
-    ...FieldComponents
+    ...FieldComponents,
   },
   props: {
     widget: Object,
@@ -67,11 +82,22 @@ export default {
 
     colHeight: {
       type: String,
-      default: null
+      default: null,
     },
-    formType: String
+    formType: String,
   },
-  inject: ['refList', 'globalModel', 'getFormConfig', 'previewState', 'columnMap', 'isDisabledFormField', 'isRequiredFormField', 'mainVilide', 'auditEditFields', 'getFormType'],
+  inject: [
+    "refList",
+    "globalModel",
+    "getFormConfig",
+    "previewState",
+    "columnMap",
+    "isDisabledFormField",
+    "isRequiredFormField",
+    "mainVilide",
+    "auditEditFields",
+    "getFormType",
+  ],
   data() {
     return {
       layoutProps: {
@@ -81,28 +107,36 @@ export default {
         xs: this.widget.options.xs || 12,
         offset: this.widget.options.offset || 0,
         push: this.widget.options.push || 0,
-        pull: this.widget.options.pull || 0
-      }
-    }
+        pull: this.widget.options.pull || 0,
+      },
+    };
   },
   computed: {
     formConfig() {
-      return this.getFormConfig()
+      return this.getFormConfig();
     },
 
     customClass() {
-      return this.widget.options.customClass || ''
+      return this.widget.options.customClass || "";
     },
 
     colHeightStyle() {
-      return !!this.colHeight ? { height: this.colHeight + 'px' } : {}
-    }
+      return !!this.colHeight ? { height: this.colHeight + "px" } : {};
+    },
   },
   created() {
-    this.initLayoutProps()
-    this.initRefList()
+    this.initLayoutProps();
+    this.initRefList();
   },
   methods: {
+      isCustomContainer(widget) {
+      // 定义需要通过 container-render 插槽处理的组件类型
+      const customContainerTypes = ["subgrid", "universal"];
+      return (
+        widget.category === "container" &&
+        customContainerTypes.includes(widget.type)
+      );
+    },
     getSubWidget(subWidget) {
       // 对一些默认值进行覆盖-避免需要重复生成form
       //接收columnMap --会导致页面很卡
@@ -117,57 +151,57 @@ export default {
       if (this.mainVilide !== undefined) {
         if (this.mainVilide.value) {
           if (this.auditEditFields.value.indexOf(subWidget.id) > -1) {
-            subWidget.options.disabled = false
+            subWidget.options.disabled = false;
           } else {
-            subWidget.options.disabled = true
+            subWidget.options.disabled = true;
           }
 
-          return subWidget
+          return subWidget;
         }
       }
 
       if (this.isDisabledFormField) {
         // 覆盖禁用状态
         if (this.isDisabledFormField[subWidget.id] !== undefined) {
-          subWidget.options.disabled = this.isDisabledFormField[subWidget.id]
+          subWidget.options.disabled = this.isDisabledFormField[subWidget.id];
         }
       }
 
       if (this.isRequiredFormField) {
         //覆盖必填校验
         if (this.isRequiredFormField[subWidget.id] !== undefined) {
-          subWidget.options.required = this.isRequiredFormField[subWidget.id]
+          subWidget.options.required = this.isRequiredFormField[subWidget.id];
         }
       }
 
-      return subWidget
+      return subWidget;
     },
     initLayoutProps() {
       if (!!this.widget.options.responsive) {
         if (!!this.previewState) {
-          this.layoutProps.md = undefined
-          this.layoutProps.sm = undefined
-          this.layoutProps.xs = undefined
+          this.layoutProps.md = undefined;
+          this.layoutProps.sm = undefined;
+          this.layoutProps.xs = undefined;
 
-          let lyType = this.formConfig.layoutType
-          if (lyType === 'H5') {
-            this.layoutProps.span = this.widget.options.xs || 12
-          } else if (lyType === 'Pad') {
-            this.layoutProps.span = this.widget.options.sm || 12
+          let lyType = this.formConfig.layoutType;
+          if (lyType === "H5") {
+            this.layoutProps.span = this.widget.options.xs || 12;
+          } else if (lyType === "Pad") {
+            this.layoutProps.span = this.widget.options.sm || 12;
           } else {
-            this.layoutProps.span = this.widget.options.md || 12
+            this.layoutProps.span = this.widget.options.md || 12;
           }
         } else {
-          this.layoutProps.span = undefined
+          this.layoutProps.span = undefined;
         }
       } else {
-        this.layoutProps.md = undefined
-        this.layoutProps.sm = undefined
-        this.layoutProps.xs = undefined
+        this.layoutProps.md = undefined;
+        this.layoutProps.sm = undefined;
+        this.layoutProps.xs = undefined;
       }
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style lang="scss" scoped>

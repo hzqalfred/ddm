@@ -130,6 +130,9 @@ export default {
 
   mounted() {
     this.handleOnMounted()
+    if (!this.designState) {
+      this.updateVxeInstanceMapping('checkboxGroupRef');
+    }
   },
 
   beforeUnmount() {

@@ -10,6 +10,7 @@
     :sub-form-row-index="subFormRowIndex"
     :sub-form-col-index="subFormColIndex"
     :sub-form-row-id="subFormRowId"
+    class="static-content-wrapper-class"
   >
     <vxe-table
       :ref="field.options.name"
@@ -36,6 +37,7 @@
           showStatus: true,
         }
       "
+      :sort-config="sortConfig"
       :radio-config="
         field.options.isSelectType === 'radio' ? { highlight: true } : null
       "
@@ -57,22 +59,35 @@
         (...args) => handleSelectionChange('selection-change', ...args)
       "
     >
+      <vxe-column
+        v-if="field.options.showIndex"
+        type="seq"
+        fixed="left"
+        align="center"
+        width="50"
+        row-resize
+      >
+        <template #header>
+          <vxe-icon name="custom-column"></vxe-icon>
+        </template>
+      </vxe-column>
       <!-- 选择列 - 只创建一次 -->
       <vxe-column
         v-if="field.options.selectabled"
         :type="field.options.isSelectType || 'radio'"
         fixed="left"
+        align="center"
         width="55"
       ></vxe-column>
 
       <!-- 序号列 -->
-      <vxe-column
+      <!-- <vxe-column
         v-if="field.options.showIndex"
         type="seq"
         width="50"
         fixed="left"
         row-resize
-      />
+      /> -->
 
       <!-- 调试信息 -->
       <!-- <div>列配置数量: {{ field.options.columns ? field.options.columns.length : 0 }}</div> -->
@@ -107,7 +122,10 @@
                 :width="grandChild.width || 200"
                 :align="grandChild.align || 'center'"
                 :header-align="grandChild.align || 'center'"
-                :sortable="grandChild.sortable !== false"
+                :sortable="getSortableConfig(grandChild)"
+                :sort-by="grandChild.sortBy"
+                :sort-type="grandChild.sortType"
+                :defaultValue="grandChild.defaultValue"
                 :visible="grandChild.visible !== false"
                 :formatter="
                   grandChild.formatter
@@ -120,6 +138,17 @@
                         name: grandChild.editRenderName || 'VxeInput',
                         enabled: true,
                         selectTableRowSet: grandChild.selectTableRowSet,
+                        options:
+                          grandChild.editRenderName == 'VxeSelect'
+                            ? Object.entries(
+                                this.dictionary_dsv[
+                                  grandChild.formatter || ''
+                                ] || {}
+                              ).map((arr) => ({
+                                value: arr[0],
+                                label: arr[1],
+                              }))
+                            : [],
                         ...grandChild.editRenderProps,
                       }
                     : null
@@ -142,7 +171,10 @@
               :width="child.width || 200"
               :align="child.align || 'center'"
               :header-align="child.align || 'center'"
-              :sortable="child.sortable !== false"
+              :sortable="getSortableConfig(child)"
+              :sort-by="child.sortBy"
+              :defaultValue="child.defaultValue"
+              :sort-type="child.sortType"
               :visible="child.visible !== false"
               :formatter="
                 child.formatter ? getFormatter(child.formatter) : null
@@ -153,6 +185,15 @@
                       name: child.editRenderName || 'VxeInput',
                       enabled: true,
                       selectTableRowSet: child.selectTableRowSet,
+                      options:
+                        child.editRenderName == 'VxeSelect'
+                          ? Object.entries(
+                              this.dictionary_dsv[child.formatter || ''] || {}
+                            ).map((arr) => ({
+                              value: arr[0],
+                              label: arr[1],
+                            }))
+                          : [],
                       ...child.editRenderProps,
                     }
                   : null
@@ -176,9 +217,12 @@
           :field="item.field"
           :fixed="item.fixed ? 'left' : ''"
           :width="item.width || 200"
+          :defaultValue="item.defaultValue"
           :align="item.align"
           :header-align="item.align"
-          :sortable="item.sortable !== false"
+          :sortable="getSortableConfig(item)"
+          :sort-by="item.sortBy"
+          :sort-type="item.sortType"
           :visible="item.visible !== false"
           :formatter="item.formatter ? getFormatter(item.formatter) : null"
           :edit-render="
@@ -187,6 +231,16 @@
                   name: item.editRenderName || 'VxeInput',
                   enabled: true,
                   selectTableRowSet: item.selectTableRowSet,
+                  defaultValue: item.defaultValue,
+                  options:
+                    item.editRenderName == 'VxeSelect'
+                      ? Object.entries(
+                          this.dictionary_dsv[item.formatter || ''] || {}
+                        ).map((arr) => ({
+                          value: arr[0],
+                          label: arr[1],
+                        }))
+                      : [],
                   ...item.editRenderProps,
                 }
               : null
@@ -199,7 +253,18 @@
           >
             <component
               :is="item.editRenderName"
+              :disabled="!item.editable"
               v-model="row[item.field]"
+              :options="
+                item.editRenderName == 'VxeSelect'
+                  ? Object.entries(
+                      this.dictionary_dsv[item.formatter || ''] || {}
+                    ).map((arr) => ({
+                      value: arr[0],
+                      label: arr[1],
+                    }))
+                  : []
+              "
               v-bind="item.editRenderProps"
             />
           </template>
@@ -208,27 +273,35 @@
           <template v-else-if="item.renderFn" #default="{ row }">
             <div v-html="evaluateRenderFn(item.renderFn, row)"></div>
           </template>
+          <template v-else #default="{ row }">
+            <!-- <div>{{ this.dictionary_dsv }}</div>
+            <div>{{ item.formatter  }}</div> -->
+            <div v-html="evalDictionary(row, item, this.dictionary_dsv)"></div>
+          </template>
         </vxe-column>
       </template>
 
       <!-- 操作列 -->
       <vxe-column
+        width="auto"
         title="操作"
         fixed="right"
-        width="200"
         v-if="field.options.operate && field.options.operate.length > 0"
       >
         <template #default="{ row }">
           <vxe-button-group>
-            <vxe-button
-              mode="text"
-              status="primary"
-              v-for="(item, index) in field.options.operate"
-              :key="index"
-              @click="handleOperate(item, row)"
-            >
-              {{ item.label }}
-            </vxe-button>
+            <template v-for="(item, index) in field.options.operate">
+              <vxe-button
+                :mode="item.mode"
+                :status="item.type"
+                :size="item.size"
+                v-if="shouldShowButton(item, row)"
+                :key="index"
+                @click="handleOperate(item, row)"
+              >
+                {{ item.label }}
+              </vxe-button>
+            </template>
           </vxe-button-group>
         </template>
       </vxe-column>
@@ -314,6 +387,7 @@ export default {
       queryParams: {},
       queryMethodInfo: "",
       dataServiceId: "",
+      currentSorts: [],
     };
   },
   computed: {
@@ -331,6 +405,38 @@ export default {
       return this.field.options.pageUnit
         ? this.field.options.pageUnit.split(",").map((x) => Number(x))
         : [10, 20, 30, 50, 100];
+    },
+    // 排序配置
+    sortConfig() {
+      const defaultConfig = {
+        trigger: "default",
+        multiple: false,
+        remote: false,
+        chronological: true,
+        defaultSort: null,
+      };
+
+      // 从 field.options.sortConfig 获取配置
+      if (this.field.options.sortConfig) {
+        Object.assign(defaultConfig, this.field.options.sortConfig);
+      } else {
+        // 向后兼容：从单独的属性获取配置
+        defaultConfig.multiple = this.field.options.multipleSort || false;
+        defaultConfig.remote = this.field.options.remoteSortable || false;
+        defaultConfig.trigger = this.field.options.sortTrigger || "default";
+      }
+
+      // 设置默认排序
+      if (this.field.options.defaultSort) {
+        defaultConfig.defaultSort = this.field.options.defaultSort;
+      }
+
+      // 如果禁用排序，返回 null
+      if (this.field.options.sortable === false) {
+        return null;
+      }
+
+      return defaultConfig;
     },
   },
 
@@ -365,6 +471,9 @@ export default {
     if (this.field.options.autoLoad !== false && this.dataServiceId) {
       this.loadTableData();
     }
+    if (!this.designState) {
+      this.updateVxeInstanceMapping(this.field.options.name);
+    }
   },
 
   beforeUnmount() {
@@ -373,6 +482,144 @@ export default {
   },
 
   methods: {
+    shouldShowButton(item, row) {
+      // 如果没有显示条件，默认显示
+      if (!item.showCondition) {
+        return true;
+      }
+
+      try {
+        // 执行显示条件判断
+        const conditionFn = new Function("row", `return ${item.showCondition}`);
+        return Boolean(conditionFn.call(this, row));
+      } catch (error) {
+        return true; // 出错时默认显示
+      }
+    },
+    evalDictionary(row, item, dsv) {
+      let formatFnc = this.getFormatter(item.formatter);
+      let value = row[item.field] || "";
+      if (formatFnc) {
+        return formatFnc(value);
+      } else {
+        let data = dsv[item.formatter] || {};
+        return data[value] || value;
+      }
+    },
+    getDefaultValue() {
+      let obj = {};
+      this.field.options.columns.map((x) => {
+        obj[x.field] = x.defaultValue || "";
+      });
+      return obj;
+    },
+    // 获取列的排序配置
+    getSortableConfig(column) {
+      // 如果全局禁用排序，返回 false
+      if (this.field.options.sortable === false) {
+        return false;
+      }
+
+      // 如果列明确指定了排序设置，使用列的设置
+      if (column.sortable !== undefined) {
+        return column.sortable;
+      }
+
+      // 默认允许排序（除非全局禁用）
+      return true;
+    },
+
+    // 处理排序变化事件
+    handleSortChange({ sortList, ...args }) {
+      console.log("排序变化:", sortList, args);
+
+      // 更新当前排序状态
+      this.currentSorts = sortList || [];
+
+      // 发送排序变化事件到 DataCenter
+      if (this.dataCenter) {
+        this.dataCenter.postEvent("table-sort-change", {
+          sortList: this.currentSorts,
+          ...args,
+        });
+      }
+
+      // 如果是服务端排序，重新加载数据
+      if (this.sortConfig?.remote) {
+        this.currentPage = 1; // 重置到第一页
+        this.loadTableData();
+      }
+
+      // 执行自定义排序事件
+      try {
+        let event = this.formConfig.eventMap?.[`${this.field.id}.onSortChange`];
+        let obj = this.formConfig?.globalObject;
+        if (obj && event && obj[event]) {
+          let sortFn = obj[event];
+          sortFn.call(this, { sortList: this.currentSorts, ...args });
+        }
+      } catch (error) {
+        console.error("执行排序自定义事件出错:", error);
+      }
+    },
+
+    // 构建排序参数
+    buildSortParams() {
+      if (!this.sortConfig?.remote || !this.currentSorts.length) {
+        return {};
+      }
+
+      // 构建后端排序参数
+      const sortParams = {};
+
+      if (this.currentSorts.length === 1) {
+        // 单个排序
+        const sort = this.currentSorts[0];
+        sortParams.sortBy = sort.field;
+        sortParams.sortOrder = sort.order;
+      } else if (this.currentSorts.length > 1) {
+        // 多个排序
+        sortParams.sortFields = this.currentSorts.map((sort) => ({
+          field: sort.field,
+          order: sort.order,
+        }));
+      }
+
+      return sortParams;
+    },
+
+    // 设置排序
+    setSortBy(sortBy) {
+      if (!this.sortConfig) return;
+
+      const $table = this.$refs[this.field.options.name];
+      if ($table) {
+        if (Array.isArray(sortBy)) {
+          // 多个排序
+          $table.sort(sortBy);
+        } else if (sortBy) {
+          // 单个排序
+          $table.sort(sortBy.field, sortBy.order);
+        } else {
+          // 清空排序
+          $table.clearSort();
+        }
+      }
+    },
+
+    // 清空排序
+    clearSort() {
+      const $table = this.$refs[this.field.options.name];
+      if ($table) {
+        $table.clearSort();
+      }
+      this.currentSorts = [];
+    },
+
+    // 获取当前排序状态
+    getCurrentSort() {
+      return [...this.currentSorts];
+    },
     // 渲染自定义单元格内容
     evaluateRenderFn(renderFnStr, row) {
       try {
@@ -430,7 +677,14 @@ export default {
     },
 
     // 点击单元格事件
-    handleClickCell({ $table }) {
+    handleClickCell({ $table, row, column, ...rest }) {
+      let events = this.formConfig.eventMap[`${this.field.id}.onCellClick`];
+      let obj = this.formConfig?.globalObject;
+      if (obj && obj[events]) {
+        let celllFn = obj[events];
+        celllFn.call(this, { row, column });
+        return;
+      }
       const currentRow = $table.getCurrentRecord();
       if (this.field.options.isSelectType == "radio") {
         $table.setRadioRow(currentRow);
@@ -451,16 +705,13 @@ export default {
     },
 
     // 双击单元格事件
-    cellDBLClickEvent({ row, column }) {
-      
-      let events = this.formConfig.eventMap[
-        `${this.field.id}.onDBLClick`
-      ];
+    cellDBLClickEvent({ row, column, ...rest }) {
+      let events = this.formConfig.eventMap[`${this.field.id}.onDBLClick`];
       let obj = this.formConfig?.globalObject;
       if (obj && obj[events]) {
         let dblFn = obj[events];
         dblFn.call(this, row, column);
-        return
+        return;
       }
 
       var strs = column.editRender?.selectTableRowSet;
@@ -518,7 +769,15 @@ export default {
           this.loadTableData();
         }
       );
-
+      this.unsubscribeSort = this.dataCenter.subscribe(
+        "table-sort-params",
+        (sortParams) => {
+          console.log("表格组件收到排序参数:", sortParams);
+          this.currentSorts = sortParams || [];
+          this.currentPage = 1;
+          this.loadTableData();
+        }
+      );
       this.unsubscribePagination = this.dataCenter.subscribe(
         "table-pagination-change",
         (pagination) => {
@@ -538,6 +797,9 @@ export default {
 
     // 取消DataCenter订阅
     unsubscribeDataCenterEvents() {
+      if (this.unsubscribeSort && typeof this.unsubscribeSort === "function") {
+        this.unsubscribeSort();
+      }
       if (
         this.unsubscribeQueries &&
         typeof this.unsubscribeQueries === "function"
@@ -573,6 +835,7 @@ export default {
         moduleName: globalParams.moduleName,
         functionCode: globalParams.functionCode,
         ...this.queryParams,
+        ...this.buildSortParams(),
         pageNum: this.currentPage,
         pageSize: this.pageSize,
       };
@@ -664,7 +927,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -731,5 +994,56 @@ export default {
 
 :deep(.vxe-header--column.col--group) {
   background-color: #f5f7fa;
+}
+/* 排序相关样式 */
+:deep(.vxe-header--column) {
+  .vxe-cell--sort {
+    .vxe-sort--asc-btn,
+    .vxe-sort--desc-btn {
+      color: #909399;
+
+      &.sort--active {
+        color: #409eff;
+      }
+    }
+  }
+}
+
+/* 排序指示器样式 */
+:deep(.vxe-table--header-wrapper) {
+  .vxe-header--column.col--sort {
+    cursor: pointer;
+
+    &:hover {
+      background-color: #f5f7fa;
+    }
+  }
+}
+
+.static-content-wrapper-class {
+  padding: 20px;
+  background-color: #fff;
+}
+
+:deep(.vxe-header--row) {
+  background-color: #fff !important;
+  .vxe-cell {
+    padding: 0 10px !important;
+    min-height: 40px !important;
+    font-weight: normal !important;
+    border-color: #707070 !important;
+    .vxe-cell--wrapper {
+      height: 100% !important;
+      display: flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+    }
+  }
+}
+:deep(.vxe-body--row) {
+  .vxe-cell {
+    padding: 0 10px !important;
+    height: 40px !important;
+  }
 }
 </style>

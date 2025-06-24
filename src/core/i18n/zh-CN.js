@@ -188,7 +188,7 @@ export default {
       attributeSetting: '属性设置',
       commonSetting: '基础属性',
       advancedSetting: '其他属性',
-      eventSetting: '事件属性',
+      eventSetting: '常用事件属性',
       uniqueName: '控件编号',
       editNameHelp: '修改名称后需按回车确认',
       label: '标签',

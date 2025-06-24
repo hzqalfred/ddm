@@ -80,10 +80,11 @@ onMounted(async () => {
     module: ParentParam,
     subData,
   });
-
+  let functionDetails = Object.assign({}, mainData);
   vFormRef.value.setFormJson(formJson);
   globalDsv.param = Object.assign({}, globalDsv.param, ParentParam, {
     formJson,
+    ...functionDetails,
   });
 });
 </script>

@@ -78,21 +78,17 @@ const handleOpenDialog = () => {
 };
 
 const saveModelFn = async () => {
-  try {
-    let params = {
-      datas: JSON.stringify([ruleForm]),
-      ...props.moduleData
-    };
-    let { code, msg } = await saveModel(params);
-    if (code === "200") {
-      $message.notifySuccess("操作成功");
-      handleClose();
-      emit("refreshModelList");
-    } else {
-      $message.notifyError(msg);
-    }
-  } catch (e) {
-    $message.notifyError(e.message);
+  let params = {
+    datas: JSON.stringify([ruleForm]),
+    ...props.moduleData
+  };
+  let {code, msg} = await saveModel(params);
+  if (code === "200") {
+    $message.notifySuccess("操作成功");
+    handleClose();
+    emit("refreshModelList");
+  } else {
+    $message.notifyError(msg);
   }
 };
 

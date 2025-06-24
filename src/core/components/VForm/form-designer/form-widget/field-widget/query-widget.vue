@@ -478,6 +478,7 @@ export default {
           configuredMap[item.searchColumn] = item;
         }
       });
+      if (!dsv?.modelCode) return;
 
       // 查询字段列表
       queryColumnList({
@@ -584,7 +585,7 @@ export default {
         }
       } catch (error) {
         this.Message.notifyError("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:",error);
       } finally {
         this.internalLoadingSearch = false;
       }
@@ -668,7 +669,7 @@ export default {
         }
       } catch (error) {
         this.Message.notifyError("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:",error);
       }
     },
     updateFieldOptions() {
@@ -688,6 +689,7 @@ export default {
 
       // 刷新字段列表
       let { param: dsv } = this.getGlobalDsv();
+      if (!dsv?.modelCode) return;
       queryColumnList({
         moduleName: dsv.moduleName,
         moduleCode: dsv.moduleCode,
@@ -897,8 +899,9 @@ export default {
 
       // 设置表单样式
       this.formWrapperStyle = {
-        width: `${containerWidth}px`,
-        left: `${leftOffset}px`,
+        width: `${containerWidth - 300}px`,
+        left: `${leftOffset + 100}px`,
+        top: '10px'
       };
     },
 
@@ -1084,10 +1087,10 @@ export default {
 }
 
 .form-wrapper {
-  border: 1px solid #e4e7ed;
+  border: 1px solid #267AFF;
   border-radius: 4px;
   padding: 20px;
-  background-color: #f9fafc;
+  background-color: #FAFCFF;
   box-shadow: 0 2px 12px 0 rgba(0, 0, 0, 0.05);
   box-sizing: border-box;
   position: absolute;

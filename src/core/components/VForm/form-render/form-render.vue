@@ -78,6 +78,8 @@ import {
   traverseFieldWidgets,
   buildDefaultFormJson,
 } from "@/core/components/VForm/lib/utils";
+import auth from "@/core/AuthManage";
+import router from "@/core/components/WebHash/router";
 
 import i18n, { changeLocale } from "@/core/i18nLang";
 import request from "@/core/Request";
@@ -170,6 +172,8 @@ export default {
       getKeyId: () => this.formDataModel[this.keyIDColumn],
       getDataCenter: () => this.dataCenter,
       getPageProvide: () => this.pageProvide,
+      getFormRender: () => this,
+      getDictionary_dsv: () => this.dictionary_dsv,
     };
   },
   data() {
@@ -185,6 +189,14 @@ export default {
       formId: null, //表单唯一Id，用于区分页面上的多个v-form-render组件！！
       externalComponents: {}, //外部组件实例集合
       customRules: this.rules,
+      // 映射表
+      _widgetMaps: {
+        idToWidget: new Map(), // id -> widget 对象
+        idToComponent: new Map(), // id -> widget 组件实例
+        idToVxeInstance: new Map(), // id -> VXE 组件实例
+        nameToId: new Map(), // name -> id (支持反向查找)
+      },
+      dictionary_dsv: {},
     };
   },
   computed: {
@@ -277,14 +289,45 @@ export default {
     this.initLocale();
     this.handleOnMounted();
   },
+  unmounted() {
+    // 清理映射表 hzq(6.17)
+    this.clearAllMaps();
+  },
   methods: {
+    bindGlobalFunctionsToVuePrototype() {
+      if (!this.formConfig?.globalObject) return;
+
+      const globalObj = deepClone(this.formConfig.globalObject);
+
+      Object.keys(globalObj).forEach((key) => {
+        let func = globalObj[key];
+        if (typeof func === "string") {
+          try {
+            func = eval(`(${func})`);
+          } catch (e) {
+            console.error(`转换函数失败: ${key}`, e);
+            return;
+          }
+        }
+
+        if (typeof func === "function") {
+          // let proto = Object.getPrototypeOf(this); //proto被锁死
+          // 绑定到Vue实例原型，使所有组件都能访问
+          this[key] = function(...args){
+            return func.apply(this, args);
+          }
+        }
+      });
+    },
     getRules() {
       let newRules = {};
       for (let key in this.rules) {
-        if (this.rulesMap[key] && this.rulesMap[key].length != 0) {
-          newRules[key] = [...this.rulesMap[key], ...this.rules[key]];
-        } else {
-          newRules[key] = this.rules[key];
+        if (!key.includes("global_")) {
+          if (this.rulesMap[key] && this.rulesMap[key].length != 0) {
+            newRules[key] = [...this.rulesMap[key], ...this.rules[key]];
+          } else {
+            newRules[key] = this.rules[key];
+          }
         }
       }
       return newRules;
@@ -483,7 +526,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -502,12 +545,13 @@ console.error("请检查全局函数的调用");
         }, 100);
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
     handleOnMounted() {
       try {
+        this.bindGlobalFunctionsToVuePrototype()
         setTimeout(() => {
           let event =
             (this.formConfig?.eventMap &&
@@ -519,10 +563,20 @@ console.error("请检查全局函数的调用");
             let customFunc = obj[event];
             customFunc.call(this);
           }
+          let { param = {} } = this.globalDsv;
+          let dic = {};
+          param?.moduleSettingList?.map((x) => {
+            dic[x.settingItem] = JSON.parse(x.settingValue);
+          });
+          this.dictionary_dsv = Object.assign({}, dic);
+          if (obj && obj["setGlobalDsv"]) {
+            let customdsvFunc = obj["setGlobalDsv"];
+            customdsvFunc.call(this, this.dictionary_dsv);
+          }
         }, 100);
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -654,6 +708,7 @@ console.error("请检查全局函数的调用");
 
           this.formJsonObj["formConfig"] = newFormJsonObj.formConfig;
           this.formJsonObj["widgetList"] = newFormJsonObj.widgetList;
+          this.batchRegisterWidgets(this.formJsonObj.widgetList); //hzq(6.17)
 
           this.insertCustomStyleAndScriptNode(); /* 必须先插入表单全局函数，否则VForm内部引用全局函数会报错！！！ */
           this.$nextTick(() => {
@@ -934,10 +989,13 @@ console.error("请检查全局函数的调用");
       });
     },
 
-    validateFields() {
-      //
-
-      this.$refs.renderForm.validate();
+    async validateFields() {
+      try {
+        await this.$refs.renderForm.validate();
+        return true; // 验证成功
+      } catch (error) {
+        return false; // 验证失败
+      }
     },
 
     disableWidgets(widgetNames) {
@@ -1040,13 +1098,207 @@ console.error("请检查全局函数的调用");
     },
     async execRequest(key, requestParam) {
       if (this.designer) return;
+      let path = router.currentRoute.value.path;
+      console.log(path);
       let url =
-        this.getGlobalDsv()?.param?.env == "preview"
+        path == "/setting"
           ? `/design/data/service/preview/${key}`
           : `/event/exec/${key}`;
       return await this.request.postData(url, requestParam);
     },
     //--------------------- 以上为组件支持外部调用的API方法 end ------------------//
+    // ==================== 智能映射管理(hzq) ====================
+
+    // 注册组件到映射表
+    registerWidgetToMaps(widget, componentInstance = null) {
+      if (!widget || !widget.id) return;
+
+      // 注册 widget
+      this._widgetMaps.idToWidget.set(widget.id, widget);
+
+      // 注册 name -> id 映射
+      if (widget.options && widget.options.name) {
+        this._widgetMaps.nameToId.set(widget.options.name, widget.id);
+      }
+
+      // 注册组件实例
+      if (componentInstance) {
+        this._widgetMaps.idToComponent.set(widget.id, componentInstance);
+
+        // 如果有 VXE 实例，也注册
+        this._tryRegisterVxeInstance(widget.id, componentInstance);
+      }
+    },
+    // 尝试注册 VXE 实例（延迟注册机制）
+    _tryRegisterVxeInstance(
+      fieldId,
+      componentInstance,
+      refsName = "fieldEditor"
+    ) {
+      if (componentInstance?.$refs[refsName]) {
+        this._widgetMaps.idToVxeInstance.set(
+          fieldId,
+          componentInstance.$refs[refsName]
+        );
+      } else {
+        // 如果还没有，下次 tick 再试
+        this.$nextTick(() => {
+          if (componentInstance?.$refs[refsName]) {
+            this._widgetMaps.idToVxeInstance.set(
+              fieldId,
+              componentInstance.$refs[refsName]
+            );
+          }
+        });
+      }
+    },
+    // 从映射表移除
+    unregisterWidgetFromMaps(fieldId, widgetName = null) {
+      this._widgetMaps.idToWidget.delete(fieldId);
+      this._widgetMaps.idToComponent.delete(fieldId);
+      this._widgetMaps.idToVxeInstance.delete(fieldId);
+
+      if (widgetName) {
+        this._widgetMaps.nameToId.delete(widgetName);
+      }
+    },
+    // ==================== 公共查找接口 ====================
+    getWidgetById(fieldId, useCache = true) {
+      if (!fieldId) return null;
+
+      // 优先从缓存获取
+      if (useCache && this._widgetMaps.idToWidget.has(fieldId)) {
+        return this._widgetMaps.idToWidget.get(fieldId);
+      }
+
+      // 遍历查找并更新缓存
+      const widget = this._findWidgetInTree(this.widgetList, fieldId);
+      if (widget) {
+        this._widgetMaps.idToWidget.set(fieldId, widget);
+      }
+
+      return widget;
+    },
+    getComponentById(fieldId) {
+      if (!fieldId) return null;
+
+      // 优先从缓存获取
+      if (this._widgetMaps.idToComponent.has(fieldId)) {
+        return this._widgetMaps.idToComponent.get(fieldId);
+      }
+
+      // 通过 name 查找
+      const widget = this.getWidgetById(fieldId);
+      if (widget?.options?.name) {
+        const component = this.formWidget?.getWidgetRef(widget.options.name);
+        if (component) {
+          this._widgetMaps.idToComponent.set(fieldId, component);
+          // 同时尝试注册 VXE 实例
+          this._tryRegisterVxeInstance(fieldId, component);
+          return component;
+        }
+      }
+
+      return null;
+    },
+    getVxeComponentById(fieldId, forceRefresh = false) {
+      if (!fieldId) return null;
+
+      // 如果不强制刷新且缓存中有，直接返回
+      if (!forceRefresh && this._widgetMaps.idToVxeInstance.has(fieldId)) {
+        return this._widgetMaps.idToVxeInstance.get(fieldId);
+      }
+
+      // 获取 Vue 组件实例
+      const component = this.getComponentById(fieldId);
+      if (component?.$refs?.fieldEditor) {
+        const vxeInstance = component.$refs.fieldEditor;
+        this._widgetMaps.idToVxeInstance.set(fieldId, vxeInstance);
+        return vxeInstance;
+      }
+
+      return null;
+    },
+    // ==================== 辅助方法 ====================
+    _findWidgetInTree(widgetList, targetId) {
+      if (!widgetList) return null;
+
+      for (let widget of widgetList) {
+        if (widget.id === targetId) {
+          return widget;
+        }
+
+        // 递归查找容器组件
+        let found = null;
+        if (widget.type === "grid" && widget.cols) {
+          for (let col of widget.cols) {
+            found = this._findWidgetInTree(col.widgetList, targetId);
+            if (found) return found;
+          }
+        } else if (widget.type === "table" && widget.rows) {
+          for (let row of widget.rows) {
+            for (let cell of row.cols) {
+              found = this._findWidgetInTree(cell.widgetList, targetId);
+              if (found) return found;
+            }
+          }
+        } else if (widget.type === "tab" && widget.tabs) {
+          for (let tab of widget.tabs) {
+            found = this._findWidgetInTree(tab.widgetList, targetId);
+            if (found) return found;
+          }
+        } else if (widget.widgetList) {
+          found = this._findWidgetInTree(widget.widgetList, targetId);
+          if (found) return found;
+        }
+      }
+
+      return null;
+    },
+    // 批量注册（用于初始化时）
+    batchRegisterWidgets(widgetList) {
+      const traverse = (widgets) => {
+        if (!widgets) return;
+
+        widgets.forEach((widget) => {
+          if (widget.id) {
+            this.registerWidgetToMaps(widget);
+          }
+
+          // 递归处理容器组件
+          if (widget.type === "grid" && widget.cols) {
+            widget.cols.forEach((col) => traverse(col.widgetList));
+          } else if (widget.type === "table" && widget.rows) {
+            widget.rows.forEach((row) =>
+              row.cols.forEach((cell) => traverse(cell.widgetList))
+            );
+          } else if (widget.type === "tab" && widget.tabs) {
+            widget.tabs.forEach((tab) => traverse(tab.widgetList));
+          } else if (widget.widgetList) {
+            traverse(widget.widgetList);
+          }
+        });
+      };
+
+      traverse(widgetList);
+    },
+    // 清理所有映射（重置表单时调用）
+    clearAllMaps() {
+      this._widgetMaps.idToWidget.clear();
+      this._widgetMaps.idToComponent.clear();
+      this._widgetMaps.idToVxeInstance.clear();
+      this._widgetMaps.nameToId.clear();
+    },
+
+    // 调试方法 - 获取映射状态
+    getMapsInfo() {
+      return {
+        widgetCount: this._widgetMaps.idToWidget,
+        componentCount: this._widgetMaps.idToComponent,
+        vxeInstanceCount: this._widgetMaps.idToVxeInstance,
+        nameToIdCount: this._widgetMaps.nameToId,
+      };
+    },
   },
 };
 </script>

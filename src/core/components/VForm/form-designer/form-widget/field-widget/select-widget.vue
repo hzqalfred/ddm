@@ -21,27 +21,35 @@
       :filterable="field.options.filterable"
       :multiple="field.options.multiple"
       :max="field.options.multipleLimit"
-      :placeholder="field.options.placeholder || i18nt('render.hint.selectPlaceholder')"
+      :placeholder="
+        field.options.placeholder || i18nt('render.hint.selectPlaceholder')
+      "
       :remote="field.options.remote"
-      :remote-method="remoteMethod"
+      :remote-config="remoteConfig"
       @focus="handleFocusCustomEvent"
       @blur="handleBlurCustomEvent"
       @change="handleChangeEvent"
     >
-      <vxe-option v-for="item in optionItems" :key="item.value" :label="item.label" :value="item.value + ''" :disabled="item.disabled"></vxe-option>
+      <vxe-option
+        v-for="item in optionItems"
+        :key="item.value"
+        :label="item.label"
+        :value="item.value + ''"
+        :disabled="item.disabled"
+      ></vxe-option>
     </vxe-select>
   </form-item-wrapper>
 </template>
 
 <script>
-import FormItemWrapper from '@/core/components/VForm/form-designer/form-widget/field-widget/form-item-wrapper.vue'
-import emitter from '@/core/components/VForm/lib/emitter'
-import i18n, { translate } from '@/core/i18nLang'
-import fieldMixin from '@/core/components/VForm/form-designer/form-widget/field-widget/fieldMixin'
+import FormItemWrapper from "@/core/components/VForm/form-designer/form-widget/field-widget/form-item-wrapper.vue";
+import emitter from "@/core/components/VForm/lib/emitter";
+import i18n, { translate } from "@/core/i18nLang";
+import fieldMixin from "@/core/components/VForm/form-designer/form-widget/field-widget/fieldMixin";
 
 export default {
-  name: 'select-widget',
-  componentName: 'FieldWidget', //必须固定为FieldWidget，用于接收父级组件的broadcast事件
+  name: "select-widget",
+  componentName: "FieldWidget", //必须固定为FieldWidget，用于接收父级组件的broadcast事件
   mixins: [emitter, fieldMixin, i18n],
   props: {
     field: Object,
@@ -52,60 +60,60 @@ export default {
 
     designState: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     subFormRowIndex: {
       /* 子表单组件行索引，从0开始计数 */
       type: Number,
-      default: -1
+      default: -1,
     },
     subFormColIndex: {
       /* 子表单组件列索引，从0开始计数 */
       type: Number,
-      default: -1
+      default: -1,
     },
     subFormRowId: {
       /* 子表单组件行Id，唯一id且不可变 */
       type: String,
-      default: ''
-    }
+      default: "",
+    },
   },
   components: {
-    FormItemWrapper
+    FormItemWrapper,
   },
   data() {
     return {
       oldFieldValue: null, //field组件change之前的值
       fieldModel: null,
-      rules: []
-    }
+      rules: [],
+      remoteConfig: {},
+    };
   },
   computed: {
     remoteMethod() {
-      if (!!this.field.options.remote && !!this.field.options.onRemoteQuery) {
-        return this.remoteQuery
+      if (!!this.field.options.remote) {
+        return this.remoteQuery;
       } else {
-        return undefined
+        return undefined;
       }
     },
     optionItems() {
-      if (!this.field.options.sourceType || this.field.options.sourceType === 'dictionary') {
-        var optionDatas = this.getOptionData()
-        var options = optionDatas[this.field.options.dictionary]
-        var ops = []
+      if (this.field.options.dictionary && !this.designState) {
+        var options =
+          this.dictionary_dsv[this.field.options.dictionary || ""] || [];
+        var ops = [];
         for (let key in options) {
           ops.push({
-            label: options[key].text,
-            value: options[key].value,
-            disabled: false
-          })
+            label: options[key],
+            value: key,
+          });
         }
-        return ops
+        return ops;
       } else {
-        return this.field.options.optionItems
+        return this.field.options.optionItems;
       }
-    }
+    },
   },
   beforeCreate() {
     /* 这里不能访问方法和属性！！ */
@@ -114,25 +122,29 @@ export default {
   created() {
     /* 注意：子组件mounted在父组件created之后、父组件mounted之前触发，故子组件mounted需要用到的prop
          需要在父组件created中初始化！！ */
-    this.initOptionItems()
-    this.initFieldModel()
-    this.registerToRefList()
-    this.initEventHandler()
-    this.buildFieldRules()
+    this.initOptionItems();
+    this.initFieldModel();
+    this.registerToRefList();
+    this.initEventHandler();
+    this.buildFieldRules();
 
-    this.handleOnCreated()
+    this.handleOnCreated();
   },
 
   mounted() {
-    this.handleOnMounted()
+    
+    this.handleOnMounted();
+    this.remoteConfig = {
+      queryMethod:this.remoteQuery
+    }
   },
 
   beforeUnmount() {
-    this.unregisterFromRefList()
+    this.unregisterFromRefList();
   },
 
-  methods: {}
-}
+  methods: {},
+};
 </script>
 
 <style lang="scss" scoped>

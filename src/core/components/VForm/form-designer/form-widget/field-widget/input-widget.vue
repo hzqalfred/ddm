@@ -11,50 +11,41 @@
     :sub-form-col-index="subFormColIndex"
     :sub-form-row-id="subFormRowId"
   >
-    <vxe-tooltip
-      class="box-item"
-      theme="dark"
-      :content="fieldModel"
-      placement="top"
-      trigger="click"
-      v-model="showFlag"
+    <vxe-input
+      ref="fieldEditor"
+      v-model="fieldModel"
+      :disabled="field.options.disabled"
+      :readonly="field.options.readonly"
+      :size="widgetSize"
+      class="hide-spin-button"
+      :type="inputType"
+      :placeholder="field.options.placeholder"
+      :clearable="field.options.clearable"
+      :min-length="field.options.minLength"
+      :max-length="field.options.maxLength"
+      :show-word-count="field.options.showWordLimit"
+      :prefix-icon="field.options.prefixIcon"
+      :suffix-icon="field.options.suffixIcon"
+      @focus="handleFocusCustomEvent"
+      @blur="handleBlurCustomEvent"
+      @input="handleInputCustomEvent"
+      @change="handleChangeEvent"
+      @mouseenter="isShowTip"
+      @mouseleave="hideTip"
+      style="width: 100%;"
     >
-      <vxe-input
-        ref="fieldEditor"
-        v-model="fieldModel"
-        :disabled="field.options.disabled"
-        :readonly="field.options.readonly"
-        :size="widgetSize"
-        class="hide-spin-button"
-        :type="inputType"
-        :placeholder="field.options.placeholder"
-        :clearable="field.options.clearable"
-        :min-length="field.options.minLength"
-        :max-length="field.options.maxLength"
-        :show-word-count="field.options.showWordLimit"
-        :prefix-icon="field.options.prefixIcon"
-        :suffix-icon="field.options.suffixIcon"
-        @focus="handleFocusCustomEvent"
-        @blur="handleBlurCustomEvent"
-        @input="handleInputCustomEvent"
-        @change="handleChangeEvent"
-        @mouseenter="isShowTip"
-        @mouseleave="hideTip"
-        style="width: 100%;"
-      >
-        <template #suffix>
-          <vxe-button
-            v-if="field.options.appendButton"
-            :disabled="
-              field.options.disabled || field.options.appendButtonDisabled
-            "
-            @click="emitAppendButtonClick"
-          >
-            <svg-icon :icon-class="field.options.buttonIcon" />
-          </vxe-button>
-        </template>
-      </vxe-input>
-    </vxe-tooltip>
+      <template #suffix>
+        <vxe-button
+          v-if="field.options.appendButton"
+          :disabled="
+            field.options.disabled || field.options.appendButtonDisabled
+          "
+          @click="emitAppendButtonClick"
+        >
+          <svg-icon :icon-class="field.options.buttonIcon" />
+        </vxe-button>
+      </template>
+    </vxe-input>
   </form-item-wrapper>
 </template>
 
@@ -107,7 +98,7 @@ export default {
       oldFieldValue: null, //field组件change之前的值
       fieldModel: null,
       rules: [],
-      showFlag:false
+      showFlag: false,
     };
   },
   methods: {
@@ -128,10 +119,10 @@ export default {
       return this.field.options.type;
     },
   },
-  watch:{
-    fieldModel(newVal){
+  watch: {
+    fieldModel(newVal) {
       // this.showFlag= newVal?.length
-    }
+    },
   },
   beforeCreate() {
     /* 这里不能访问方法和属性！！ */

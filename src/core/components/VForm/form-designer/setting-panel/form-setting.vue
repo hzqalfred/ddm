@@ -112,7 +112,7 @@
               style="width: 100%;vertical-align: middle"
               :options="globalFuncOpts"
               @change="(val) => setEventMap('form.DOMContentLoaded', val)"
-              @dblclick="editGlobalFunctionsObject('form.DOMContentLoaded')"
+              @dblclick="editGlobalFunctionsObject('form.DOMContentLoaded','form.DOMContentLoaded')"
               allow-create
               filterable
               clearable
@@ -124,7 +124,7 @@
               style="width: 100%;vertical-align: middle"
               :options="globalFuncOpts"
               @change="(val) => setEventMap('form.onLoad', val)"
-              @dblclick="editGlobalFunctionsObject('form.onLoad')"
+              @dblclick="editGlobalFunctionsObject('form.onLoad','form.onLoad')"
               allow-create
               filterable
               clearable
@@ -136,7 +136,7 @@
               style="width: 100%;vertical-align: middle"
               :options="globalFuncOpts"
               @change="(val) => setEventMap('form.onChange', val)"
-              @dblclick="editGlobalFunctionsObject('form.onChange')"
+              @dblclick="editGlobalFunctionsObject('form.onChange','form.onChange')"
               allow-create
               filterable
               clearable
@@ -250,11 +250,12 @@ export default {
       //   //{label: 'mini', value: 'mini'},
       // ],
 
-      formSizes: [ // 使用 vxe 的尺寸控制
+      formSizes: [
+        // 使用 vxe 的尺寸控制
         { label: "默认尺寸", value: "" },
-        {label: '中等尺寸', value: 'medium'},
-        {label: "小型尺寸", value: "small" },
-        {label: '超小尺寸', value: 'mini'},
+        { label: "中等尺寸", value: "medium" },
+        { label: "小型尺寸", value: "small" },
+        { label: "超小尺寸", value: "mini" },
       ],
 
       showEditFormCssDialogFlag: false,
@@ -268,11 +269,11 @@ export default {
 
       eventMap: {},
       curEventName: "",
+      curEventId:""
     };
   },
   created() {
     //导入表单JSON后需要重新加载自定义CSS类！！！
-    this.eventMap = this.formConfig.eventMap || {};
     this.designer.handleEvent("form-json-imported", () => {
       this.formCssCode = this.formConfig.cssCode;
       insertCustomCssToHead(this.formCssCode);
@@ -284,6 +285,7 @@ export default {
     /* SettingPanel和FormWidget为兄弟组件, 在FormWidget加载formConfig时，
          此处SettingPanel可能无法获取到formConfig.cssCode, 故加个延时函数！ */
     setTimeout(() => {
+      this.eventMap = this.formConfig.eventMap || {};
       this.formCssCode = this.formConfig.cssCode;
       insertCustomCssToHead(this.formCssCode);
       this.extractCssClass();
@@ -373,8 +375,9 @@ export default {
       );
     },
 
-    editGlobalFunctionsObject(name) {
+    editGlobalFunctionsObject(name,id) {
       this.curEventName = name;
+      this.curEventId = id;
       console.log("editGlobalFunctionsObject");
 
       // 直接从当前的 globalObject 生成编辑器需要的字符串
@@ -428,11 +431,20 @@ export default {
         this.designer.formConfig.globalObject = eval(
           "(" + this.globalFunctionObject + ")"
         );
-        let mergeEventMap = Object.assign({},this.designer.formConfig.eventMap,this.eventMap) 
-        this.eventMap =  this.designer.formConfig.eventMap = mergeEventMap
-        if(!this.eventMap[this.curEventName]&&this.designer.formConfig.globalObject[this.curEventName]) this.eventMap[this.curEventName] = this.curEventName
+        let mergeEventMap = Object.assign(
+          {},
+          this.designer.formConfig.eventMap,
+          this.eventMap
+        );
+        this.eventMap = this.designer.formConfig.eventMap = mergeEventMap;
+        if (
+          !this.eventMap[this.curEventId] &&
+          this.designer.formConfig.globalObject[this.curEventName]
+        )
+          this.eventMap[this.curEventId] = this.curEventName;
         this.showGlobalFunctionObjectDialogFlag = false;
         this.curEventName = "";
+        this.curEventId = "";
       } catch (e) {
         this.$message.error("编辑格式有误,检查编辑器是否为对象");
       }

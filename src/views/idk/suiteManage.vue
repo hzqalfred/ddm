@@ -135,7 +135,10 @@
             <vxe-column field="settingValue" title="标识符" :edit-render="{}">
               <template #edit="{ row }">
                 <vxe-input
-                  v-if="row.settingType == 'moduleAttribute'"
+                  v-if="
+                    row.settingType == 'moduleAttribute' ||
+                      row.settingType == 'context'
+                  "
                   v-model="row.settingValue"
                 ></vxe-input>
                 <vxe-select
@@ -488,6 +491,7 @@ const toolbarButtons = [
 const settingTypeSelect = {
   name: "VxeSelect",
   options: [
+    { label: "上下文", value: "context" },
     { label: "提供界面", value: "providePage" },
     { label: "引用界面", value: "referencePage" },
     { label: "回调接口", value: "callbackInterface" },
@@ -1138,6 +1142,7 @@ const handleFunctionSaveRequest = async (param) => {
 
 const handleFunctionGuide = (row = null) => {
   const selectedRow = row || functionTableRef.value.getRadioRecord();
+  
 
   if (!selectedRow) {
     // return messageHandler.notifyWarning("请先选择数据");
@@ -1216,6 +1221,7 @@ const handleInterfaceDesign = async (row, type) => {
     formColumnNums: res.data.formColumnNums,
     tableName: res.data.tableName,
     functionId: row.functionId,
+    moduleSettingList: res.data.moduleSettingList,
   };
   homePage.create({
     data: {
@@ -1345,13 +1351,14 @@ const reloadJson = (json) => {
   if (json) {
     const param = Object.assign({}, guideData.value);
     param.designJson = json;
-    param.functionCode = json?.formConfig?.functionCode || ''
+    param.functionCode = json?.formConfig?.functionCode || "";
+    let functionId = guideData.value.functionId || json?.formConfig?.functionId;
     homePage.create({
       data: {
         type: "window",
         ele: "window",
         code: "webdesigner",
-        id: "webdesigner" + guideData.value.functionId,
+        id: "webdesigner" + functionId,
         title: "界面设计-web设计器",
         width: "100%",
         height: "85%",

@@ -85,6 +85,9 @@ export default {
   mounted() {
     this.initChart();
     this.handleOnMounted();
+    if (!this.designState) {
+      this.updateVxeInstanceMapping("chartContainer");
+    }
   },
   beforeUnmount() {
     this.unregisterFromRefList();
@@ -209,16 +212,16 @@ export default {
     },
 
     // 公开API: 更新图表配置
-    updateChartConfig(config,event) {
+    updateChartConfig(config, event) {
       this.field.options.chartOptions = config;
 
-      this.applyChartOptions(false,event);
+      this.applyChartOptions(false, event);
     },
   },
   watch: {
     "field.options.chartOptions": {
       handler() {
-        this.applyChartOptions(false,this.prevEvents);
+        this.applyChartOptions(false, this.prevEvents);
       },
       deep: true,
     },

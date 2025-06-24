@@ -4,6 +4,9 @@ import request from "@/core/Request";
 import Message from "../../../../../Message";
 import eventBus from "@/core/utils/event-bus";
 import { comUtils } from "@/core/comUtils";
+import FormRender from "../../../form-render/form-render.vue";
+import router from "@/core/components/WebHash/router";
+
 export default {
   inject: [
     "refList",
@@ -15,6 +18,8 @@ export default {
     "getFunId",
     "getDataCenter",
     "getPageProvide",
+    "getFormRender",
+    "getDictionary_dsv",
   ],
 
   data() {
@@ -24,6 +29,7 @@ export default {
       Message,
       comUtils: comUtils(this),
       isMouseInput: false,
+      _globalFunctionsBound: false,
     };
   },
   computed: {
@@ -53,6 +59,12 @@ export default {
     },
     pageProvide() {
       return this.getPageProvide();
+    },
+    FormRender() {
+      return this.getFormRender();
+    },
+    dictionary_dsv() {
+      return this.getDictionary_dsv();
     },
     widgetSize() {
       return this.field.options.size || "small";
@@ -104,6 +116,8 @@ export default {
     },
   },
   methods: {
+    // 在 fieldMixin.js 中
+
     syncUpdateFormModel(value) {
       if (this.designState) return;
 
@@ -286,12 +300,12 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
-
     handleOnMounted() {
       if (this.designState) return;
+      this.bindGlobalFunctionsToVuePrototype()
       try {
         let event =
           (this.formConfig.eventMap &&
@@ -302,9 +316,10 @@ export default {
           let mountFunc = obj[event];
           mountFunc.call(this);
         }
+        this.registerToDesignerMaps();
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -338,6 +353,7 @@ export default {
           delete this.refList[oldRefName];
         }
       }
+      if (!this.designState) this.unregisterFromDesignerMaps();
     },
 
     initOptionItems(keepSelected) {
@@ -393,12 +409,18 @@ export default {
       }
 
       if (this.field.options.required) {
-        // this.rules.push({
-        //   required: true,
-        //   //trigger: ['blur', 'change'],
-        //   trigger: ['blur'] /* 去掉change事件触发校验，change事件触发时formModel数据尚未更新，导致radio/checkbox必填校验出错！！ */,
-        //   message: this.field.options.requiredHint || this.i18nt('render.hint.fieldRequired')
-        // })
+        this.rules.push({
+          validator: "/^$/",
+          required: true,
+          //trigger: ['blur', 'change'],
+          trigger: [
+            "blur",
+          ] /* 去掉change事件触发校验，change事件触发时formModel数据尚未更新，导致radio/checkbox必填校验出错！！ */,
+          message:
+            this.field.options.requiredHint ||
+            this.i18nt("render.hint.fieldRequired"),
+          errorMsg: this.field.options.requiredHint,
+        });
       }
       if (this.designState) return;
 
@@ -440,7 +462,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -521,6 +543,7 @@ export default {
     },
 
     syncUpdateFormModel(value) {
+      value = value?.value || value;
       if (this.designState) {
         return;
       }
@@ -538,8 +561,8 @@ export default {
     },
 
     handleChangeEvent(value) {
+      // value = typeof value == "string" ? value : value.value;
       if (value === null) value = "";
-      if (value.value) value = value.value;
       this.syncUpdateFormModel(value);
       this.emitFieldDataChange(value, this.oldFieldValue);
 
@@ -567,7 +590,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -585,7 +608,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -606,7 +629,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -631,7 +654,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -676,7 +699,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -695,7 +718,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -704,7 +727,6 @@ export default {
         //设计状态不触发点击事件
         return;
       }
-
       try {
         let event =
           (this.formConfig.eventMap &&
@@ -719,12 +741,13 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
     remoteQuery(keyword) {
       if (this.designState) return;
+
       try {
         let event =
           (this.formConfig.eventMap &&
@@ -737,7 +760,7 @@ export default {
         }
       } catch (error) {
         this.$message.error("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:", error);
       }
     },
 
@@ -996,11 +1019,80 @@ export default {
     },
     async execRequest(key, requestParam) {
       if (this.designer) return;
+      let path = router.currentRoute.value.path;
+      console.log(path);
       let url =
-        this.getGlobalDsv()?.param?.env == "preview"
+        path == "/setting"
           ? `/design/data/service/preview/${key}`
           : `/event/exec/${key}`;
       return await this.request.postData(url, requestParam);
+    },
+    registerToDesignerMaps() {
+      if (this.field && this.field.id) {
+        this.getFormRender().registerWidgetToMaps(this.field, this);
+      }
+    },
+    updateVxeInstanceMapping(refsName = "fieldEditor") {
+      if (this.field && this.field.id && this.$refs[refsName]) {
+        this.getFormRender()._tryRegisterVxeInstance(
+          this.field.id,
+          this,
+          refsName
+        );
+      }
+    },
+    unregisterFromDesignerMaps() {
+      if (this.field && this.field.id) {
+        const widgetName = this.field.options ? this.field.options.name : null;
+        this.getFormRender().unregisterWidgetFromMaps(
+          this.field.id,
+          widgetName
+        );
+      }
+    },
+    getWidgetById(fieldId) {
+      return this.getFormRender().getWidgetById(fieldId);
+    },
+    getComponentById(fieldId) {
+      return this.getFormRender().getComponentById(fieldId);
+    },
+    getVxeComponentById(fieldId) {
+      return this.getFormRender().getVxeComponentById(fieldId);
+    },
+    getVxeComponentsByIds(fieldIds) {
+      const result = new Map();
+      fieldIds.forEach((id) => {
+        const vxeInstance = this.getVxeComponentById(id);
+        if (vxeInstance) {
+          result.set(id, vxeInstance);
+        }
+      });
+      return result;
+    },
+    bindGlobalFunctionsToVuePrototype() {
+      if (!this.formConfig?.globalObject) return;
+
+      const globalObj = deepClone(this.formConfig.globalObject);
+
+      Object.keys(globalObj).forEach((key) => {
+        let func = globalObj[key];
+        if (typeof func === "string") {
+          try {
+            func = eval(`(${func})`);
+          } catch (e) {
+            console.error(`转换函数失败: ${key}`, e);
+            return;
+          }
+        }
+
+        if (typeof func === "function") {
+          // let proto = Object.getPrototypeOf(this); //proto被锁死
+          // 绑定到Vue实例原型，使所有组件都能访问
+          this[key] = function(...args){
+            return func.apply(this, args);
+          }
+        }
+      });
     },
     //--------------------- 以上为组件支持外部调用的API方法 end ------------------//
   },

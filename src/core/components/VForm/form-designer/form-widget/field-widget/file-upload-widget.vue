@@ -214,7 +214,7 @@ export default {
           }
         } catch (error) {
           this.Message.notifyError("请检查全局函数的调用");
-          console.error("请检查全局函数的调用");
+          console.error("请检查全局函数的调用:",error);
         }
         this.updateFieldModelAndEmitDataChangeForUpload(
           fileList,
@@ -292,7 +292,7 @@ export default {
           }
         } catch (error) {
           this.Message.notifyError("请检查全局函数的调用");
-          console.error("请检查全局函数的调用");
+          console.error("请检查全局函数的调用:",error);
         }
       }
     },
@@ -325,7 +325,7 @@ export default {
         }
       } catch (error) {
         this.Message.notifyError("请检查全局函数的调用");
-        console.error("请检查全局函数的调用");
+        console.error("请检查全局函数的调用:",error);
       }
     },
   },

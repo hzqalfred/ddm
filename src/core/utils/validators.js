@@ -107,7 +107,7 @@ const FormValidators = {
   */
 
   regExp(rule, value, callback) {
-    
+    console.log(value)
     //空值不校验
     if (isNull(value) || (value.length <= 0)) {
       callback()

@@ -45,7 +45,7 @@
     class="fixed-window-panel"
     v-show="item.visible === true"
   >
-    <div class="fixed-window-header">
+    <!-- <div class="fixed-window-header">
       <div class="fixed-window-title">{{ item.title }}</div>
       <el-button
         type="text"
@@ -61,7 +61,7 @@
         "
         icon="Close"
       />
-    </div>
+    </div> -->
     <!-- 在固定模式下渲染内容 -->
     <div class="fixed-window-body">
       <div v-if="isPageLoaded">
@@ -541,8 +541,9 @@ onMounted(() => {
 
 .fixed-window-body {
   flex: 1;
-  padding: 16px;
+  /* padding: 16px; */
   overflow: auto;
   height: calc(100% - 100px); /* 减去header的高度 */
+  background-color: #f7f7f7;
 }
 </style>

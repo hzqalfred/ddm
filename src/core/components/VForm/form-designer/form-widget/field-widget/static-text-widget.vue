@@ -1,8 +1,19 @@
 <template>
-  <static-content-wrapper :designer="designer" :field="field" :design-state="designState" :parent-widget="parentWidget"
-    :parent-list="parentList" :index-of-parent-list="indexOfParentList" :sub-form-row-index="subFormRowIndex"
-    :sub-form-col-index="subFormColIndex" :sub-form-row-id="subFormRowId">
-    <div ref="fieldEditor" :style="`
+  <static-content-wrapper
+    :designer="designer"
+    :field="field"
+    :design-state="designState"
+    :parent-widget="parentWidget"
+    :parent-list="parentList"
+    :index-of-parent-list="indexOfParentList"
+    :sub-form-row-index="subFormRowIndex"
+    :sub-form-col-index="subFormColIndex"
+    :sub-form-row-id="subFormRowId"
+  >
+    <div
+      ref="fieldEditor"
+      :style="
+        `
     font-family: ${field.options.fontFamily};
     font-size: ${field.options.fontSize}px;
     font-weight: ${field.options.fontWeight};
@@ -13,26 +24,31 @@
     text-transform: ${field.options.textTransform};
     letter-spacing: ${field.options.letterSpacing}px;
     text-indent: ${field.options.textIndent}px;
-    `">
-      <vxe-text 
-      :size="field.options.comsize" 
-      :status="field.options.status" 
-      :icon="field.options.icon"
-      :clickToCopy="field.options.clickToCopy">
-      {{ field.options.title }}</vxe-text>
+    `
+      "
+    >
+      <vxe-text
+        ref="fieldEditor"
+        :size="field.options.comsize"
+        :status="field.options.status"
+        :icon="field.options.icon"
+        :clickToCopy="field.options.clickToCopy"
+      >
+        {{ field.options.title }}</vxe-text
+      >
     </div>
   </static-content-wrapper>
 </template>
 
 <script>
-import StaticContentWrapper from '@/core/components/VForm/form-designer/form-widget/field-widget/static-content-wrapper.vue'
-import emitter from '@/core/components/VForm/lib/emitter'
-import i18n, { translate } from '@/core/i18nLang'
-import fieldMixin from '@/core/components/VForm/form-designer/form-widget/field-widget/fieldMixin'
+import StaticContentWrapper from "@/core/components/VForm/form-designer/form-widget/field-widget/static-content-wrapper.vue";
+import emitter from "@/core/components/VForm/lib/emitter";
+import i18n, { translate } from "@/core/i18nLang";
+import fieldMixin from "@/core/components/VForm/form-designer/form-widget/field-widget/fieldMixin";
 
 export default {
-  name: 'static-text-widget',
-  componentName: 'FieldWidget', //必须固定为FieldWidget，用于接收父级组件的broadcast事件
+  name: "static-text-widget",
+  componentName: "FieldWidget", //必须固定为FieldWidget，用于接收父级组件的broadcast事件
   mixins: [emitter, fieldMixin, i18n],
   props: {
     field: Object,
@@ -43,27 +59,27 @@ export default {
 
     designState: {
       type: Boolean,
-      default: false
+      default: false,
     },
 
     subFormRowIndex: {
       /* 子表单组件行索引，从0开始计数 */
       type: Number,
-      default: -1
+      default: -1,
     },
     subFormColIndex: {
       /* 子表单组件列索引，从0开始计数 */
       type: Number,
-      default: -1
+      default: -1,
     },
     subFormRowId: {
       /* 子表单组件行Id，唯一id且不可变 */
       type: String,
-      default: ''
-    }
+      default: "",
+    },
   },
   components: {
-    StaticContentWrapper
+    StaticContentWrapper,
   },
   computed: {},
   beforeCreate() {
@@ -73,22 +89,22 @@ export default {
   created() {
     /* 注意：子组件mounted在父组件created之后、父组件mounted之前触发，故子组件mounted需要用到的prop
          需要在父组件created中初始化！！ */
-    this.registerToRefList()
-    this.initEventHandler()
+    this.registerToRefList();
+    this.initEventHandler();
 
-    this.handleOnCreated()
+    this.handleOnCreated();
   },
 
   mounted() {
-    this.handleOnMounted()
+    this.handleOnMounted();
   },
 
   beforeUnmount() {
-    this.unregisterFromRefList()
+    this.unregisterFromRefList();
   },
 
-  methods: {}
-}
+  methods: {},
+};
 </script>
 
 <style lang="scss" scoped></style>
